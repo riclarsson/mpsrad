@@ -1,0 +1,26 @@
+name : mpsrad
+
+dependencies : 
+	- datetime
+	- PyQt5
+	- files
+	- msgpack
+	- guidata
+	- PythonQwt
+	- pillow
+	- scipy
+	- numpy
+	- guiqwt
+	- matplotlib
+#	- os
+#	- re
+	- pyserial
+	- serial
+#	- socket
+#	- struct
+#	- threading
+#	- time
+
+
+
+
