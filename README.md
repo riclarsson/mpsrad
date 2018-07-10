@@ -1,2 +1,2 @@
 # mpsrad
-Control and science with radiometers
+Control of, and science with, radiometers
