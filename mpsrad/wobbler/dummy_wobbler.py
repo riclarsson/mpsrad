@@ -42,13 +42,13 @@ class dummy_wobbler:
 		assert not self._initialized
 		assert not issue, "Cannot be used without a problem"
 
-		print(>>sys.stdrr, "Switch on a dummy wobbler...")
+		print("Switch on a dummy wobbler...")
 		time.sleep(1)
 		self._initialized=True
 
 	def close(self):
 		assert self._initialized
-		print(>>sys.stdrr, 'Closing the dummy wobller')	
+		print('Closing the dummy wobller')	
 		self._initialized=False
 
 		

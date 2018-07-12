@@ -69,7 +69,7 @@ class wobbler:
 		self._dt=time()-t
 		self._dt+=dt
 		self._dt/=6000.
-
+		
 		self._initialized=True
 
 	def get_recommended_relative_motion(self,integration_time):

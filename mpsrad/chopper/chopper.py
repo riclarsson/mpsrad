@@ -14,7 +14,6 @@ except :
 	
 	
 from time import time,sleep
-from . import dummy_chopper
 
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
@@ -81,15 +80,12 @@ class chopper:
 
 	def init(self):
 		assert not self._initialized, "Cannot init initialized chopper"
-		try :
-			self._serial=serial.Serial(self._device,115200,timeout=2)
+		self._serial=serial.Serial(self._device,115200,timeout=2)
 
-			# get greetings
-			greetings=self._ask('G')
-			self._initialized=True
-			return greetings
-		except :
-			self._dummy_chopper=dummy_chopper.dummy_chopper()
+		# get greetings
+		greetings=self._ask('G')
+		self._initialized=True
+		return greetings
 
 	def _close_and_restore(self):
 		""" Close the device access"""

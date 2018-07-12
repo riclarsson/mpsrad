@@ -6,15 +6,13 @@
 Welcome to mpsrad's documentation!
 ==================================
 
+MPS software to control radiometer with Python 3.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   modules
+   howto
+   credits
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
