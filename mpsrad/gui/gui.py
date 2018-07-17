@@ -622,17 +622,3 @@ class MainWindow(QMainWindow):
 
 		self.timer.start()
 
-# Show GUI ==============================================================
-from guidata import qapplication
-app=qapplication()
-window=MainWindow()
-
-def start():
-	window.show()
-	app.exec_()
-
-__guidir__=os.getcwd()
-# =============================================================================
-
-if __name__=='__main__':
-	start()
