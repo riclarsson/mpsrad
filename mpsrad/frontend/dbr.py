@@ -17,7 +17,11 @@ except:
 
 from . import dummy_frontend
 
+__all__ = ['dbr',]
+
 class dbr:
+	'''Does it work ?
+	'''
 	# Constants:
 	band3switch = 246
 	reflimits = (13, 16.4)

@@ -11,6 +11,8 @@ import numpy as np
 from time import sleep
 from . import dummy_backend
 
+__all__=['FW']
+
 class FW:
 	""" Connection to fast fourier transform spectrometer
 	Functions:

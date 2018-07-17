@@ -16,6 +16,7 @@ except :
 	raise RuntimeError('Please install pyserial, not serial')
 
 class wobbler:
+	'''Can't you just read that ?'''
 	def __init__(self,device='/dev/wobbler',baud=9600,address=b'0'):
 		self._initialized=False
 
