@@ -16,5 +16,3 @@ dummy\_frontend module
     :members:
     :undoc-members:
     :show-inheritance:
-
-

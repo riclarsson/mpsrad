@@ -16,4 +16,3 @@ dummy\_chopper module
     :members:
     :undoc-members:
     :show-inheritance:
-

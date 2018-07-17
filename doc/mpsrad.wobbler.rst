@@ -9,7 +9,6 @@ wobbler module
     :undoc-members:
     :show-inheritance:
 
-
 dummy\_wobbler module
 `````````````````````
 
@@ -17,4 +16,3 @@ dummy\_wobbler module
     :members:
     :undoc-members:
     :show-inheritance:
-

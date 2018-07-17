@@ -9,4 +9,3 @@ gui module
     :undoc-members:
     :show-inheritance:
 
-

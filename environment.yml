@@ -15,6 +15,7 @@ dependencies :
 #	- os
 #	- re
 	- pyserial
+	- sphinx_rtd_theme
 	- serial
 #	- socket
 #	- struct

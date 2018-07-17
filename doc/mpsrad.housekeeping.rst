@@ -9,7 +9,6 @@ sensors module
     :undoc-members:
     :show-inheritance:
 
-
 dummy\_housekeeping module
 ``````````````````````````
 
@@ -17,4 +16,3 @@ dummy\_housekeeping module
     :members:
     :undoc-members:
     :show-inheritance:
-
