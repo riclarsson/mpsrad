@@ -21,7 +21,7 @@
 
 project = 'mpsrad'
 copyright = '2018, Author'
-author = 'Author'
+author = 'MPS'
 
 # The short X.Y version
 version = ''

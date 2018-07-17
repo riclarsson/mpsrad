@@ -16,6 +16,7 @@ except :
 	raise RuntimeError('Please install pyserial, not serial')
 
 class wobbler:
+	'''Can't you just read that ?'''
 	def __init__(self,device='/dev/wobbler',baud=9600,address=b'0'):
 		self._initialized=False
 
@@ -69,7 +70,7 @@ class wobbler:
 		self._dt=time()-t
 		self._dt+=dt
 		self._dt/=6000.
-
+		
 		self._initialized=True
 
 	def get_recommended_relative_motion(self,integration_time):

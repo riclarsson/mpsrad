@@ -1,30 +1,18 @@
-mpsrad.wobbler package
-======================
+Wobbler package
+===============
 
-Submodules
-----------
-
-mpsrad.wobbler.dummy\_wobbler module
-------------------------------------
-
-.. automodule:: mpsrad.wobbler.dummy_wobbler
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-mpsrad.wobbler.wobbler module
------------------------------
+wobbler module
+``````````````
 
 .. automodule:: mpsrad.wobbler.wobbler
     :members:
     :undoc-members:
     :show-inheritance:
 
+dummy\_wobbler module
+`````````````````````
 
-Module contents
----------------
-
-.. automodule:: mpsrad.wobbler
+.. automodule:: mpsrad.wobbler.dummy_wobbler
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,30 +1,18 @@
-mpsrad.housekeeping package
-===========================
+Housekeeping package
+====================
 
-Submodules
-----------
-
-mpsrad.housekeeping.dummy\_housekeeping module
-----------------------------------------------
-
-.. automodule:: mpsrad.housekeeping.dummy_housekeeping
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-mpsrad.housekeeping.sensors module
-----------------------------------
+sensors module
+``````````````
 
 .. automodule:: mpsrad.housekeeping.sensors
     :members:
     :undoc-members:
     :show-inheritance:
 
+dummy\_housekeeping module
+``````````````````````````
 
-Module contents
----------------
-
-.. automodule:: mpsrad.housekeeping
+.. automodule:: mpsrad.housekeeping.dummy_housekeeping
     :members:
     :undoc-members:
     :show-inheritance:

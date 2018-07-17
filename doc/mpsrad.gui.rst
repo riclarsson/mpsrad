@@ -1,22 +1,11 @@
-mpsrad.gui package
-==================
+Graphical User Interface package
+================================
 
-Submodules
-----------
-
-mpsrad.gui.gui module
----------------------
+gui module
+``````````
 
 .. automodule:: mpsrad.gui.gui
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: mpsrad.gui
-    :members:
-    :undoc-members:
-    :show-inheritance:

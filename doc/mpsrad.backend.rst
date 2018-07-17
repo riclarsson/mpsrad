@@ -1,38 +1,27 @@
-mpsrad.backend package
-======================
+Backend package
+===============
 
-Submodules
-----------
-
-mpsrad.backend.FW module
-------------------------
+FW module
+`````````
 
 .. automodule:: mpsrad.backend.FW
     :members:
     :undoc-members:
     :show-inheritance:
 
-mpsrad.backend.dummy\_backend module
-------------------------------------
 
-.. automodule:: mpsrad.backend.dummy_backend
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-mpsrad.backend.rcts104 module
------------------------------
+rcts104 module
+``````````````
 
 .. automodule:: mpsrad.backend.rcts104
     :members:
     :undoc-members:
     :show-inheritance:
 
+dummy\_backend module
+`````````````````````
 
-Module contents
----------------
-
-.. automodule:: mpsrad.backend
+.. automodule:: mpsrad.backend.dummy_backend
     :members:
     :undoc-members:
     :show-inheritance:
