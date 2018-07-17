@@ -474,7 +474,7 @@ class MainWindow(QMainWindow):
 	# =======================================================================
 	def measureInitToggle(self):
 		if self.running: self.init=True
-		else: self.init=not self.init
+			else: self.init=not self.init
 
 		if not self.running and self.init: self.measureThread.do('init')
 		else: self.measureThread.do('close')
@@ -622,3 +622,16 @@ class MainWindow(QMainWindow):
 
 		self.timer.start()
 
+# Show GUI =====================================================================
+from guidata import qapplication
+
+def start():
+	app=qapplication()
+	window=MainWindow()
+	window.show()
+	app.exec_()
+
+# ==============================================================================
+
+if __name__='__main__':
+	start()
