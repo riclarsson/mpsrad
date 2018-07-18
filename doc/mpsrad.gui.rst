@@ -5,7 +5,16 @@ gui module
 ``````````
 
 .. automodule:: mpsrad.gui.gui
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    
+.. autosummary::
+   :toctree: generated
 
+    measure
+    ToolBar
+    HKwidget
+    Controlwidget
+    ControlPanel
+    SpectrometerPanel
+    SpectrometerTabs
+    CentralWidget
+    MainWindow

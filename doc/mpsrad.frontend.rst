@@ -5,14 +5,18 @@ dbr module
 ``````````
 
 .. automodule:: mpsrad.frontend.dbr
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   dbr
 
 dummy\_frontend module
 ``````````````````````
 
 .. automodule:: mpsrad.frontend.dummy_frontend
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   dummy_dbr

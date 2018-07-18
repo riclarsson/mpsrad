@@ -580,10 +580,7 @@ class MainWindow(QMainWindow):
 				order=self.measurements.get_order()
 				order=[order[k]+str(order[0:k].count(w)) for k,w in enumerate(order)]
 
-				for tab,spec in zip(self.mainwidget.tabs.sp,se
-					Ta1=(Pa1-Pc)/(Ph-Pc)*(Th-Tc)+Tc
-					Ta2=(Pa2-Pc)/(Ph-Pc)*(Th-Tc)+Tc
-					Ta1[idx],Ta2[idx]=0,0lf.measurements.spec):
+				for tab,spec in zip(self.mainwidget.tabs.sp,self.measurements.spec):
 					d=dict(zip(order,spec._data))
 					if isinstance(spec._channels,list): ch=spec._channels[0]
 					else: ch=spec._channels
@@ -646,5 +643,5 @@ def start():
 
 # ==============================================================================
 
-if __name__='__main__':
+if __name__=='__main__':
 	start()

@@ -5,14 +5,18 @@ wobbler module
 ``````````````
 
 .. automodule:: mpsrad.wobbler.wobbler
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   wobbler
 
 dummy\_wobbler module
 `````````````````````
 
 .. automodule:: mpsrad.wobbler.dummy_wobbler
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   dummy_wobbler
