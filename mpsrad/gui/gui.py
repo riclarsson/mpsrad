@@ -94,6 +94,7 @@ class measure(Thread):
 class ToolBar(QToolBar):
 	def __init__(self,Icons):
 		QToolBar.__init__(self)
+		global window
 
 		ButtonAxis=QToolButton()
 		ButtonAxis.setCheckable(True)
@@ -579,7 +580,10 @@ class MainWindow(QMainWindow):
 				order=self.measurements.get_order()
 				order=[order[k]+str(order[0:k].count(w)) for k,w in enumerate(order)]
 
-				for tab,spec in zip(self.mainwidget.tabs.sp,self.measurements.spec):
+				for tab,spec in zip(self.mainwidget.tabs.sp,se
+					Ta1=(Pa1-Pc)/(Ph-Pc)*(Th-Tc)+Tc
+					Ta2=(Pa2-Pc)/(Ph-Pc)*(Th-Tc)+Tc
+					Ta1[idx],Ta2[idx]=0,0lf.measurements.spec):
 					d=dict(zip(order,spec._data))
 					if isinstance(spec._channels,list): ch=spec._channels[0]
 					else: ch=spec._channels
@@ -622,3 +626,25 @@ class MainWindow(QMainWindow):
 
 		self.timer.start()
 
+# Show GUI =====================================================================
+from guidata import qapplication
+
+window=''
+
+def begin():
+	app=qapplication()
+	global window
+	window=MainWindow()
+	print('ok')
+	return(app,window)
+
+
+def start():
+	app,window=begin()
+	window.show()
+	app.exec_()
+
+# ==============================================================================
+
+if __name__='__main__':
+	start()
