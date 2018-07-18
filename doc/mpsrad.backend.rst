@@ -5,23 +5,28 @@ FW module
 `````````
 
 .. automodule:: mpsrad.backend.FW
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
+.. autosummary::
+   :toctree: generated
+
+   FW
 
 rcts104 module
 ``````````````
 
 .. automodule:: mpsrad.backend.rcts104
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   rcts104
 
 dummy\_backend module
 `````````````````````
 
 .. automodule:: mpsrad.backend.dummy_backend
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   dummy_spectrometer

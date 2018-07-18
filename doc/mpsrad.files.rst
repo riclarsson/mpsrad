@@ -2,6 +2,10 @@ Files module
 ============
 
 .. automodule:: mpsrad.files
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   calibration
+   averaging
+   raw

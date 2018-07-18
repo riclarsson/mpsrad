@@ -5,14 +5,18 @@ chopper module
 ``````````````
 
 .. automodule:: mpsrad.chopper.chopper
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   chopper
 
 dummy\_chopper module
 `````````````````````
 
 .. automodule:: mpsrad.chopper.dummy_chopper
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+   :toctree: generated
+
+   dummy_chopper

@@ -12,14 +12,8 @@ try :
 except :
 	raise RuntimeError('Please install pyserial, not serial')
 	
-
-__all__ = ['chopper']
-
 from time import time,sleep
 
-""" 
-Does it really work ?
-"""
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
 		# Lock-check
