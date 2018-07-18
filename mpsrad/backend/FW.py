@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 16 11:24:10 2017
+
+"""Created on Thu Nov 16 11:24:10 2017
 
 @author: larsson
+
 """
 import socket
 import struct
@@ -14,16 +15,14 @@ from . import dummy_backend
 __all__=['FW']
 
 class FW:
-	""" Connection to fast fourier transform spectrometer
+	"""Connection to fast fourier transform spectrometer
+
 	Functions:
-		init:
-			Connects to the machine and initialized how it will be run
-		close:
-			Remove the connect to the machine and initiate simple clearing
-		run:
-			Runs the machine and fills requested channel
-		save_data:
-			Saves data to file
+	   - init: Connects to the machine and initialized how it will be run
+	   - close: Remove the connect to the machine and initiate simple clearing
+	   - run: Runs the machine and fills requested channel
+	   - save_data: Saves data to file
+
 	"""
 	def __init__(self,
 			library=None,
