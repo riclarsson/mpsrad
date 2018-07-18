@@ -7,7 +7,7 @@ sensors module
 .. automodule:: mpsrad.housekeeping.sensors
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
 
    sensors
 

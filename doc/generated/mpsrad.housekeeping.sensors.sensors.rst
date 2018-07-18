@@ -1,5 +1,5 @@
-mpsrad.housekeeping.sensors.sensors
-===================================
+sensors
+=======
 
 .. currentmodule:: mpsrad.housekeeping.sensors
 
