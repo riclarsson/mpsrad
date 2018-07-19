@@ -6,7 +6,7 @@ Last modification: 07.05.2018
 
 Author: Borys Dabrowski
 
-Parse the signal derived from the dual band receiver (dbr)
+Interactions with CTS functionality
 """
 
 import datetime,socket,re,time
