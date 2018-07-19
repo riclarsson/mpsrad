@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created: 07.03.2018
+
 Last modification: 09.07.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
+Set the device's mode of measurements
 """
 import serial
 

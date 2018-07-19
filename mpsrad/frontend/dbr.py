@@ -3,7 +3,7 @@
 """
 Created on Mon Dec  4 16:11:55 2017
 
-@author: larsson
+Author: Richard Larsson
 
 Quick and dirty connection to the DBR computer to execute commands that changes
 the frequency settings of the machine.  Remember to set the correct frequency

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Wiltron local oscillator communication for stepping frequency
-
 Last modification: 09.07.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
+Wiltron local oscillator communication for stepping frequency
 """
 
 import socket,time

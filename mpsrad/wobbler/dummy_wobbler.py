@@ -1,4 +1,10 @@
 
+"""
+Author: Yann Goument
+
+Emulates the wobbler's function in case of dysfunction
+"""
+
 #============================================================================================
 
 # imports and definitions #==================================================================

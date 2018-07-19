@@ -3,8 +3,9 @@
 
 """Created on Thu Nov 16 11:24:10 2017
 
-@author: larsson
+Author: Richard Larsson
 
+Connection to fast fourier transform spectrometer
 """
 
 import socket

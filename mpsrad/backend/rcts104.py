@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created: 09.07.2018
+
 Last modification: 07.05.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
+Parse the signal derived from the dual band receiver (dbr)
 """
 
 import datetime,socket,re,time

@@ -1,4 +1,8 @@
+"""
+Author: Yann Goument
 
+Emulate the spectrometer in case of dysfunction
+"""
 
 #============================================================================================
 
