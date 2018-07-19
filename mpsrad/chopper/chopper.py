@@ -6,7 +6,7 @@ Last modification: 09.07.2018
 
 Author: Borys Dabrowski
 
-Set the device's mode of measurements
+Controls the Chopper
 """
 import serial
 
