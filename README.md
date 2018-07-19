@@ -2,13 +2,13 @@
 Control of, and science with, radiometers
 
 ## Requirements
-Mpsrad requires Python version 3.6 or higher. The recommended way to get Python is through [Ananconda]. But of ocurse, any other Python distribution is also working.
+Mpsrad requires Python version 3.6 or higher. The recommended way to get Python is through [Ananconda]. But of course, any other Python distribution will also work.
 
 ## Installation
-If you would like to install the mpsrad's package, please refer to the How to tab and the package installation section in the documentation.
+If you would like to install the mpsrad's package, please refer to the HowTo tab and the package installation section in the documentation.
 
 ## Use of the software
-If you would like to use the mpsrad's software, please refer to the How to tab and the gui utilisation section in the documentation.
+If you would like to use the mpsrad's software, please refer to the HowTo tab and the GUI utilisation section in the documentation.
 
 ## Documentation
 To access the documentation, please follow the few steps below:
