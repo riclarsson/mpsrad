@@ -5,8 +5,6 @@ Last modification: 09.07.2018
 Author: Borys Dabrowski
 
 Wobbler control library
-
-Set the device's position 
 """
 
 import serial,re
