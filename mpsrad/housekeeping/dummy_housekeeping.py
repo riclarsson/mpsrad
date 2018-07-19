@@ -2,7 +2,7 @@
 """
 Author: Yann Goument
 
-Emulates the sensors' function in case of dysfunction
+Emulates the sensors' interface in case of malfunction
 """
 
 #============================================================================================
