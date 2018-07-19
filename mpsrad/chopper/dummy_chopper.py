@@ -1,7 +1,7 @@
 """
 Author: Yann Goument
 
-Emulates the chopper's function in case of dysfunction
+Emulates the chopper's function in case of malfunction
 """
 
 #============================================================================================
