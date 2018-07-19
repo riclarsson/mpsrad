@@ -4,7 +4,7 @@ Last modification: 09.07.2018
 
 Author: Borys Dabrowski
 
-Wiltron local oscillator communication for stepping frequency
+Wiltron local oscillator communication for setting/stepping frequency
 """
 
 import socket,time
