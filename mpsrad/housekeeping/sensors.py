@@ -6,7 +6,7 @@ Author: Borys Dabrowski
 
 Last modification: 09.07.2018
 
-Get the temperature of... in order to ...
+Get the temperature of various external sensors in order to store as housekeeping data
 """
 
 from . import dummy_housekeeping
