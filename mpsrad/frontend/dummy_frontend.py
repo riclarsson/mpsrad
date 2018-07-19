@@ -2,7 +2,7 @@
 """
 Author: Yann Goument
 
-Emulates the DBR's function in case of dysfunction
+Emulates the DBR's interface in case of malfunction
 """
 #============================================================================================
 
