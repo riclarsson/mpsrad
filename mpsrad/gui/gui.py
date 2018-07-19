@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
-# IRAM GUI
-# Author: Borys Dabrowski, dabrowski@mps.mpg.de
-# Last modification: 18.06.2018
+
+"""
+IRAM GUI
+
+Author: Borys Dabrowski
+
+Last modification: 18.06.2018
+
+Graphical User Interface of the software
+"""
+
 # =============================================================================
 
 # Imports and definitions =====================================================
@@ -30,6 +38,10 @@ import mpsrad.files as files
 
 # Measurements as separate thread =============================================
 class measure(Thread):
+
+	"""
+	Run the measures through the measurements module
+	"""
 	def __init__(self,parent):
 		Thread.__init__(self)
 		self.parent=parent
@@ -92,6 +104,10 @@ class measure(Thread):
 
 # Tollbar with buttons ========================================================
 class ToolBar(QToolBar):
+	"""Create the toolbar of the interface
+
+	For more information about the QToolBar's methods and attributes used here, please refer to the `QtoolBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtoolbar.html>`_
+	"""
 	def __init__(self,Icons):
 		QToolBar.__init__(self)
 		global window
@@ -125,6 +141,10 @@ class ToolBar(QToolBar):
 
 # Housekeeping widget =========================================================
 class HKwidget(DataSet):
+	"""Create the different widget useful for the housekeeping values
+
+	For more information about the guidata.dataset.datatypes module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/datatypes.html>`_
+	"""
 	_bd=BeginGroup("DACs").set_pos(col=0)
 	GunnBias=FloatItem("GunnBias",default=1.,unit="").set_prop("display",format="%4.2f")
 	LoopGain=FloatItem("LoopGain",default=1.,unit="").set_prop("display",format="%4.2f")
@@ -156,6 +176,9 @@ class HKwidget(DataSet):
 
 # Control widget ==============================================================
 class Controlwidget(DataSet):
+	"""
+	For more information about the guidata.dataset.datatypes module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/datatypes.html>`_
+	"""
 	Directory=DirectoryItem("Directory",default=os.path.abspath("../../../data/"))
 
 	_bt=BeginGroup("Frequency and time").set_pos(col=0)
@@ -180,6 +203,9 @@ class Controlwidget(DataSet):
 
 # Control panel (HK + control) ================================================
 class ControlPanel(QSplitter):
+	"""
+	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	"""
 	def __init__(self,parent):
 		QSplitter.__init__(self,parent)
 		self.parent=parent
@@ -191,7 +217,10 @@ class ControlPanel(QSplitter):
 
 # Spectrometer plots panel ====================================================
 class SpectrometerPanel(QSplitter):
-	# Modified CurvePlot class (with mouse zoom and pan)
+	"""Modified CurvePlot class (with mouse zoom and pan)
+
+	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	"""
 	class cplot(CurvePlot):
 		def __init__(self,axis=None,updateWidgets=None,*args,**kwargs):
 			CurvePlot.__init__(self,*args,**kwargs)
@@ -346,6 +375,10 @@ class SpectrometerPanel(QSplitter):
 
 # Spectrometer panels in tabs =================================================
 class SpectrometerTabs(QTabWidget):
+	"""Tab of the interface to display the different curves
+
+	For more information about the QTabWidget's methods and attributes used here, please refer to the `QTabWidget documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtabwidget.html>`_
+	"""
 	def __init__(self,parent,spec_names=[]):
 		QTabWidget.__init__(self)
 		self.parent=parent
@@ -376,6 +409,10 @@ class SpectrometerTabs(QTabWidget):
 
 # =============================================================================
 class CentralWidget(QSplitter):
+	"""Main construction of the interface
+
+	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	"""
 	def __init__(self,parent):
 		QSplitter.__init__(self,parent)
 		self.parent=parent
@@ -415,6 +452,10 @@ class CentralWidget(QSplitter):
 
 # =============================================================================
 class MainWindow(QMainWindow):
+	"""Launch the setup and display the interface window
+
+	For more information about the QMainWindow's methods and attributes used here, please refer to the `QMainWindow documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qmainwindow.html>`_
+	"""
 	def __init__(self):
 		QMainWindow.__init__(self)
 		self.setup()

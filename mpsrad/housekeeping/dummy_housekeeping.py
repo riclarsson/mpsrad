@@ -1,4 +1,10 @@
 
+"""
+Author: Yann Goument
+
+Emulates the sensors' interface in case of malfunction
+"""
+
 #============================================================================================
 
 # imports and definitions #==================================================================

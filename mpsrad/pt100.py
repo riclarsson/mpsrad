@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Code to read temperature
-
 Last modification: 29.03.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
+Code to measure resistance and convert it in temperature. 
 """
 
 import socket,time

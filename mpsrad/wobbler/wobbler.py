@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Wobbler control library
-
 Last modification: 09.07.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
+Wobbler control library
 """
 
 import serial,re

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created: 26.04.2018
-Author: Borys Dabrowski, dabrowski@mps.mpg.de
+
+Author: Borys Dabrowski
+
 Last modification: 09.07.2018
+
+Get the temperature of various external sensors in order to store as housekeeping data
 """
 
 from . import dummy_housekeeping

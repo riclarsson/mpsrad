@@ -3,7 +3,9 @@
 """
 Created on Mon Dec  4 20:07:33 2017
 
-@author: larsson
+Author: Richard Larsson
+
+Run the measurements once all devices are initialized
 """
 
 from mpsrad.wobbler import wobbler

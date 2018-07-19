@@ -1,4 +1,9 @@
 
+"""
+Author: Yann Goument
+
+Emulates the DBR's interface in case of malfunction
+"""
 #============================================================================================
 
 # imports and definitions #==================================================================

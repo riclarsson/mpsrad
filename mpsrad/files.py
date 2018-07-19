@@ -3,7 +3,8 @@
 """
 Created on Thu Nov 23 16:03:11 2017
 
-@author: larsson
+Author: Richard Larsson
+
 """
 
 import struct
