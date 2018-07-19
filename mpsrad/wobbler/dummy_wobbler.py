@@ -2,7 +2,7 @@
 """
 Author: Yann Goument
 
-Emulates the wobbler's function in case of dysfunction
+Emulates the wobbler's interface in case of malfunction
 """
 
 #============================================================================================
