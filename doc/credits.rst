@@ -3,15 +3,15 @@ Credits
 
 Lead scientist: **LARSSON Richard**
 
-   - *profession*: 
+   - *profession*: Scientist
    - *email address*: larsson@mps.mpg.de
 
 Main programmer: **DABROWSKI Borys**
 
-   - *profession*: 
+   - *profession*: Engineer
    - *email address*: dabrowski@mps.mpg.de
 
 Package and documentation builder: **GOUMENT Yann**
 
-   - *profession*: student
+   - *profession*: Student
    - *email address*: yann.goument@estaca.eu
