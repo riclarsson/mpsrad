@@ -13,7 +13,7 @@ class myIcons():
 	"""
 	def __init__(self,icondir=None):
 		if icondir is None:
-			icondir=os.path.dirname(os.path.abspath("__file__"))+"/icons/"
+			icondir=os.path.dirname(__file__)+"/icons/"
 
 		icons=[f for f in os.listdir(icondir) if f.find('.png')>-1]
 		self._icons={f.replace('.png',''):QIcon(icondir+f) for f in icons}
