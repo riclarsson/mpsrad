@@ -12,15 +12,15 @@ Please follow the few instructions below to display and use the graphical user i
 
   At this step you will see the gui window.
 
-.. |camera| image:: ../mpsrad/gui/icons/camera.png
+.. |init| image:: ../mpsrad/gui/icons/init2.png
    :scale: 20%
 
-* Press the |camera| button to start the initialization
+* Press the |init| button to start the initialization
 
-.. |eye| image:: ../mpsrad/gui/icons/eye.png
+.. |play| image:: ../mpsrad/gui/icons/play.png
    :scale: 20%
 
-* Once you get all the *Init* messages, press the |eye| button to run the machines.
+* Once you get the "Ready to measure" message, press the |play| button to run the machines.
 
 
 Congratulation, you obtain great curves !
