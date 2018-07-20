@@ -5,8 +5,6 @@ GUI module
 ``````````
 
 .. automodule:: mpsrad.gui.gui
-    
-.. currentmodule:: mpsrad.gui.gui
 
 .. autosummary::
    :toctree: generated
@@ -19,8 +17,6 @@ Housekeekping control IRAM module
 
 .. automodule:: mpsrad.gui.HK_control_IRAM
 
-.. currentmodule:: mpsrad.gui.HK_control_IRAM
-
 .. autosummary:: 
    :toctree: generated
 
@@ -32,8 +28,6 @@ Bars module
 
 .. automodule:: mpsrad.gui.myBars
 
-.. currentmodule:: mpsrad.gui.myBars
-
 .. autosummary::
    :toctree: generated
 
@@ -44,8 +38,6 @@ Icons module
 ````````````
 
 .. automodule:: mpsrad.gui.myIcons
-
-.. currentmodule:: mpsrad.gui.myIcons
 
 .. autosummary::
    :toctree: generated

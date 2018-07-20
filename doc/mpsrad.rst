@@ -12,6 +12,7 @@ Subpackages
     mpsrad.gui
     mpsrad.housekeeping
     mpsrad.wobbler
+    mpsrad.helper
 
 Submodules
 ==========
