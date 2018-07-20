@@ -23,3 +23,4 @@ Submodules
    mpsrad.pt100
    mpsrad.version
    mpsrad.wiltron68169B
+   mpsrad.measureThread
