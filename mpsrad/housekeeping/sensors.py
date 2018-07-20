@@ -12,12 +12,7 @@ Get the temperature of various external sensors in order to store as housekeepin
 from . import dummy_housekeeping
 import serial
 from time import time,sleep
-
-try : 
-	a=serial.Serial
-	del(a)
-except :
-	raise RuntimeError('Please install pyserial, not serial')
+from mpsrad.helper import serialCheck
 
 class sensors:
 	def __init__(self,device='/dev/sensors'):
@@ -46,6 +41,7 @@ class sensors:
 
 	def init(self):
 		assert not self._initialized, "Cannot init initialized sensors"
+		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
 		try :
 			self._serial=serial.Serial(self._device,115200,timeout=2)
 

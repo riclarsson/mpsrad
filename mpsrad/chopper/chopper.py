@@ -10,15 +10,9 @@ Controls the Chopper
 """
 import serial
 
-
-try : 
-	a=serial.Serial
-	del(a)
-except :
-	raise RuntimeError('Please install pyserial, not serial')
-
 from time import time,sleep
 from . import dummy_chopper
+from mpsrad.helper import serialCheck
 
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
@@ -86,6 +80,7 @@ class chopper:
 	def init(self):
 		try:
 			assert not self._initialized, "Cannot init initialized chopper"
+			checkserial=serialCheck.serialcheck()	#make sure to use pyserial
 			self._serial=serial.Serial(self._device,115200,timeout=2)
 
 			# get greetings

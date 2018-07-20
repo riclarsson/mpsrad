@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Identify USB Arduino controlers (chooper and wobbler) device paths
+Identify USB Arduino controlers (chopper and wobbler) device paths
 
 Last modification: 14.06.2018
 Author: Borys Dabrowski, dabrowski@mps.mpg.de

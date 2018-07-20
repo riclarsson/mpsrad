@@ -9,12 +9,7 @@ Wobbler control library
 
 import serial,re
 from time import time,sleep
-
-try : 
-	a=serial.Serial
-	del(a)
-except :
-	raise RuntimeError('Please install pyserial, not serial')
+from mpsrad.helper import serialCheck
 
 class wobbler:
 
@@ -41,7 +36,7 @@ class wobbler:
 
 	def init(self,position):
 		assert not self._initialized, "Cannot init initialized wobbler"
-
+		checkserial=serialCheck.serialcheck()  #make sure to use pyserial
 		# Open a serial port
 		self._serial=serial.Serial(self._device,self._baud,timeout=2)
 

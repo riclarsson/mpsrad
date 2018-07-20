@@ -11,3 +11,13 @@ Get USB device module
 
    getUSBdevs
    displayUSBdevs
+
+SerialCheck module
+``````````````````
+
+.. automodule:: mpsrad.helper.serialCheck
+
+.. autosummary::
+   :toctree: generated
+
+   serialcheck
