@@ -11,6 +11,17 @@ sensors module
 
    sensors
 
+Agilent module
+``````````````
+
+.. automodule:: mpsrad.housekeeping.Agilent
+
+.. autosummary::
+   :toctree: generated
+
+   Agilent34970A
+   measureThread
+
 dummy\_housekeeping module
 ``````````````````````````
 

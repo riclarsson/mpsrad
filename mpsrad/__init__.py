@@ -20,4 +20,4 @@ if not __MPS_SETUP__:
     from . import wobbler
     from . import housekeeping
     from . import gui
-
+    from . import helper
