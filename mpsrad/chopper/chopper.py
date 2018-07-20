@@ -10,13 +10,15 @@ Controls the Chopper
 """
 import serial
 
+
 try : 
 	a=serial.Serial
 	del(a)
 except :
 	raise RuntimeError('Please install pyserial, not serial')
-	
+
 from time import time,sleep
+from . import dummy_chopper
 
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
@@ -82,13 +84,16 @@ class chopper:
 		return self._ask('?')
 
 	def init(self):
-		assert not self._initialized, "Cannot init initialized chopper"
-		self._serial=serial.Serial(self._device,115200,timeout=2)
+		try:
+			assert not self._initialized, "Cannot init initialized chopper"
+			self._serial=serial.Serial(self._device,115200,timeout=2)
 
-		# get greetings
-		greetings=self._ask('G')
-		self._initialized=True
-		return greetings
+			# get greetings
+			greetings=self._ask('G')
+			self._initialized=True
+			return greetings
+		except:
+			dummy_chop=dummy_chopper.dummy_chopper()
 
 	def _close_and_restore(self):
 		""" Close the device access"""
