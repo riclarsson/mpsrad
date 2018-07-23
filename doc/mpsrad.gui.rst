@@ -1,62 +1,13 @@
 Graphical User Interface package
 ================================
 
-GUI module
-``````````
+The GUI is based on guidata and the rest.  See documentation in mpsrad/gui or on PLEASE ADD DOCUMENTATION HERE!
 
-.. automodule:: mpsrad.gui.gui
+GUI interface
+`````````````
 
-.. autosummary::
-   :toctree: generated
+.. automodule:: mpsrad.gui
 
-    CentralWidget
-    MainWindow
-
-Housekeekping control IRAM module
-`````````````````````````````````
-
-.. automodule:: mpsrad.gui.HK_control_IRAM
-
-.. autosummary:: 
-   :toctree: generated
-
-   HKwidget
-   Controlwidget
-
-Bars module
-```````````
-
-.. automodule:: mpsrad.gui.myBars
 
 .. autosummary::
    :toctree: generated
-
-   StatusBar
-   ToolBar
-
-Icons module
-````````````
-
-.. automodule:: mpsrad.gui.myIcons
-
-.. autosummary::
-   :toctree: generated
-
-   myIcons
-
-Spectrometer tabs module
-````````````````````````
-
-.. automodule:: mpsrad.gui.SpectrometerTabs
-
-.. currentmodule:: mpsrad.gui.SpectrometerTabs
-
-.. autosummary::
-   :toctree: generated
-
-   cPlot
-   cItem
-   FilterWidget
-   XYlim
-   SpectrometerPanel
-   SpectrometerTabs
