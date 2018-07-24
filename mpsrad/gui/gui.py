@@ -206,11 +206,6 @@ def begin():
 	print('ok')
 	return(app,window)
 
-def start():
-	app,window=begin()
-	window.show()
-	app.exec_()
-
 # =============================================================================
 if __name__=='__main__':
 	start()

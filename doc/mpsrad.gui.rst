@@ -1,62 +1,65 @@
 Graphical User Interface package
 ================================
 
+GUI interface
+`````````````
+
+.. automodule:: mpsrad.gui
+
+   .. autofunction:: start
+
 GUI module
 ``````````
 
 .. automodule:: mpsrad.gui.gui
 
-.. autosummary::
-   :toctree: generated
+   .. autoclass:: CentralWidget
 
-    CentralWidget
-    MainWindow
+   .. autoclass:: MainWindow
+
+   .. autofunction:: begin
+
 
 Housekeekping control IRAM module
 `````````````````````````````````
 
 .. automodule:: mpsrad.gui.HK_control_IRAM
 
-.. autosummary:: 
-   :toctree: generated
+   .. autoclass:: HKwidget
+   
+   .. autoclass:: Controlwidget
 
-   HKwidget
-   Controlwidget
 
 Bars module
 ```````````
 
 .. automodule:: mpsrad.gui.myBars
 
-.. autosummary::
-   :toctree: generated
+   .. autoclass:: StatusBar
 
-   StatusBar
-   ToolBar
+   .. autoclass:: ToolBar 
 
 Icons module
 ````````````
 
 .. automodule:: mpsrad.gui.myIcons
 
-.. autosummary::
-   :toctree: generated
+   .. autoclass:: myIcons
 
-   myIcons
 
 Spectrometer tabs module
 ````````````````````````
 
 .. automodule:: mpsrad.gui.SpectrometerTabs
 
-.. currentmodule:: mpsrad.gui.SpectrometerTabs
+   .. autoclass:: cPlot
 
-.. autosummary::
-   :toctree: generated
+   .. autoclass:: cItem
 
-   cPlot
-   cItem
-   FilterWidget
-   XYlim
-   SpectrometerPanel
-   SpectrometerTabs
+   .. autoclass:: FilterWidget
+
+   .. autoclass:: XYlim
+
+   .. autoclass:: SpectrometerPanel
+
+   .. autoclass:: SpectrometerTabs
