@@ -11,7 +11,8 @@ GUI interface
 GUI module
 ``````````
 
-.. automodule:: mpsrad.gui.gui
+GUI interface
+`````````````
 
    .. autoclass:: CentralWidget
 
@@ -32,8 +33,6 @@ Housekeekping control IRAM module
 
 Bars module
 ```````````
-
-.. automodule:: mpsrad.gui.myBars
 
    .. autoclass:: StatusBar
 
