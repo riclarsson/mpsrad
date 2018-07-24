@@ -12,7 +12,6 @@ from time import time,sleep
 from mpsrad.helper import serialCheck
 
 class wobbler:
-
 	def __init__(self,device='/dev/wobbler',baud=9600,address=b'0'):
 		self._initialized=False
 

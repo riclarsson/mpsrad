@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Measurements as separate thread
-
-Last modification: 29.06.2018
-
-Author: Borys Dabrowski
-"""
+# Measurements as separate thread
+# Author: Borys Dabrowski, dabrowski@mps.mpg.de
+# Last modification: 29.06.2018
 # =============================================================================
 from threading import Thread
 from time import localtime,sleep,time

@@ -33,6 +33,17 @@ class dummy_chopper:
 		assert not self._initialized
 		
 		print("Switch on a dummy chopper...")
+		'''
+		if issue_number==1 :
+			print('Failed to set cold')
+		elif issue_number==2 :
+			print('Failed to set ref')
+		elif issue_number==3 :
+			print('Failed to set hot')
+		elif issue_number==4 :
+			print('Failed to set ant')
+		'''
+
 		time.sleep(1)
 		self._initialized=True
 

@@ -2,7 +2,7 @@
 """
 Created: 09.07.2018
 
-Last modification: 07.05.2018
+Last modification: 23.05.2018
 
 Author: Borys Dabrowski
 
@@ -133,17 +133,17 @@ class rcts104:
 		begin=time.time()
 
 		reply=b""
-		while reply.find(b"read {")==-1 and time.time()-begin<self._runtime*2:
+		while reply.find(b"delay ")==-1 and time.time()-begin<self._runtime*2:
 			time.sleep(0.1)
 			try: reply+=self._socket.recv(65536)
 			except: pass
 
 		assert len(reply)>0, "Failed to attain data from the machine"
 
-		parse=re.search(b"{([0-9\s]+)}",reply)
-		x=map(int,parse.group(1).split(b' '))
-		y=re.search(b"read {(.+)}$",reply)
-		cycles=float(re.search(b".+cycles ([0-9]+)",y.group(1)).group(1))
+		self._reply=reply	# test line
+
+		x=map(int,reply.split(b'{')[1].split(b'}')[0].split(b' '))
+		cycles=float(reply.split(b'cycles ')[1].split(b' ')[0])
 		self._data[int(i)]=np.array([n/cycles for n in x])
 
 		self._sent=False
