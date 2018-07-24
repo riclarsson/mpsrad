@@ -23,6 +23,7 @@ import numpy as np
 
 
 class measurements:
+	"""Run the measurements once all devices are initialized"""
 	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
 		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
 		freq_range=(214, 270),

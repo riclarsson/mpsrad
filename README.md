@@ -13,6 +13,7 @@ If you would like to use the mpsrad's software, please refer to the HowTo tab an
 ## Documentation
 To access the documentation, please follow the few steps below:
 1. Go to the 'doc' folder 
-2. In the shell command: make html
-3. Go to the _build/html folder
-4. Open 'index.html'
+2. Remove the 'generated' folder 
+3. In the shell command: 'make clean' then 'make html'
+4. Go to the _build/html folder
+5. Open 'index.html'

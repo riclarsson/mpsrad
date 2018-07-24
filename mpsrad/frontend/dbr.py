@@ -6,8 +6,9 @@ Created on Mon Dec  4 16:11:55 2017
 Author: Richard Larsson
 
 Quick and dirty connection to the DBR computer to execute commands that changes
-the frequency settings of the machine.  Remember to set the correct frequency
-in the Reference Local Oscillator before executing this code
+the frequency settings of the machine.  
+
+Remember to set the correct frequency in the Reference Local Oscillator before executing this code
 """
 
 try:
@@ -18,6 +19,8 @@ except:
 from . import dummy_frontend
 
 class dbr:
+	"""How to fill in that ?
+	"""
 	# Constants:
 	band3switch = 246
 	reflimits = (13, 16.4)

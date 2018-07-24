@@ -16,13 +16,6 @@ from . import dummy_backend
 
 class FW:
 	"""Connection to fast fourier transform spectrometer
-
-	Functions:
-	   - init: Connects to the machine and initialized how it will be run
-	   - close: Remove the connect to the machine and initiate simple clearing
-	   - run: Runs the machine and fills requested channel
-	   - save_data: Saves data to file
-
 	"""
 	def __init__(self,
 			library=None,
@@ -53,6 +46,8 @@ class FW:
 		self._sent=False
 
 	def init(self):
+		"""Connects to the machine and initialized how it will be run
+		"""
 		assert not self._initialized,"Cannot init initialized FFTS"
 
 		try:
@@ -105,6 +100,8 @@ class FW:
 			self._udp_addr)
 
 	def run(self):
+		"""Runs the machine and fills requested channel
+		"""
 		assert self._initialized,"Cannot run uninitialized FFTS"
 		assert not self._sent,"Cannot resend data,download first"
 
@@ -127,7 +124,8 @@ class FW:
 		self._sent=False
 
 	def save_data(self,basename="/home/waspam/data/test/FW",binary=True):
-		"""Saves data to file at basename+filename
+		"""Saves data to file at basename+filename.
+
 		Uses last access-time to server socket as filename
 		Saves with numpy binary format if binary is true or as ascii otherwise
 		"""

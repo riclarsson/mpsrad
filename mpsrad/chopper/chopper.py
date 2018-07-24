@@ -78,6 +78,8 @@ class chopper:
 		return self._ask('?')
 
 	def init(self):
+		"""Connection with the chopper and set the device access
+		"""
 		try:
 			assert not self._initialized, "Cannot init initialized chopper"
 			checkserial=serialCheck.serialcheck()	#make sure to use pyserial
