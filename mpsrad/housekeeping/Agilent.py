@@ -13,6 +13,8 @@ from scipy.interpolate import make_interp_spline
 from mpsrad.helper import serialCheck
 
 class Agilent34970A:
+	"""Reads sensors connected to Agilent 34970A multimeter
+	"""
 	def __init__(self,device='/dev/ttyS0',baud=57600):
 		self._initialized=False
 		self._device=device
@@ -46,6 +48,8 @@ class Agilent34970A:
 			]
 
 	def init(self):
+		"""Set the connection with the device
+		"""
 		assert not self._initialized, "Cannot init initialized multimeter"
 		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
 
@@ -56,6 +60,8 @@ class Agilent34970A:
 		self._initialized=True
 
 	def close(self):
+		"""Close the connection with the device
+		"""
 		assert self._initialized, "Cannot close uninitialized multimeter"
 		self._measureThread.close()
 		while self._measureThread.running: pass
@@ -210,8 +216,8 @@ class Agilent34970A:
 		|  [V]          |  [mbar]      [Torr]      [Pa]    |
 		+===============+==================================+
 		| < 0.5         | sensor error                     |
-		+---------------+  underrange 			   |
-		| 0.5 ...  1.82 |                                  |
+		+---------------+----------------------------------+
+		| 0.5 ...  1.82 | underrange                       |
 		+---------------+----------+-----------+-----------+
 		|     1.82      | 5.0e-09  |  3.8e-09  | 5.0e-07   |
 		+---------------+----------+-----------+-----------+

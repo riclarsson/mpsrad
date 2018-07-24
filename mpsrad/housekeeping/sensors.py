@@ -15,6 +15,8 @@ from time import time,sleep
 from mpsrad.helper import serialCheck
 
 class sensors:
+	"""Get the temperature of various external sensors in order to store as housekeeping data
+	"""
 	def __init__(self,device='/dev/sensors'):
 		# Lock-check
 		self._initialized=False
@@ -40,6 +42,8 @@ class sensors:
 		return values
 
 	def init(self):
+		"""Set the connection to the device
+		"""
 		assert not self._initialized, "Cannot init initialized sensors"
 		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
 		try :
@@ -54,20 +58,28 @@ class sensors:
 			self._dummy_sensors=dummy_housekeeping.dummy_sensors()
 
 	def get_values(self):
+		"""Function to obtain values from the sensor
+		"""
 		assert self._initialized, "Cannot run uninitialized machine"
 		values=self._get_values()
 		return dict(zip(self._sensors,values))
 
 	def C2K(self,temp):
+		"""Convert Celius to Kelvin
+		"""
 		return temp+273.15
 
 	def get_temperature(self, unit='K',sensor='Temp0'):
+		"""Get the temperature of the atmosphere
+		"""
 		assert self._initialized, "Cannot run uninitialized machine"
 		temp=self.get_values()[sensor]
 		if unit == 'K': return self.C2K(temp)
 		return temp
 
 	def get_humidity(self):
+		"""Get the humidity values of the atmosphere
+		"""
 		assert self._initialized, "Cannot run uninitialized machine"
 		return self._get_values()[3]
 

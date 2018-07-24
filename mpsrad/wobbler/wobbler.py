@@ -34,6 +34,8 @@ class wobbler:
 		self._pos=None
 
 	def init(self,position):
+		"""Set the connection to the device
+		"""
 		assert not self._initialized, "Cannot init initialized wobbler"
 		checkserial=serialCheck.serialcheck()  #make sure to use pyserial
 		# Open a serial port
@@ -88,6 +90,7 @@ class wobbler:
 		return p
 
 	def move(self,position):
+		"""Move the device"""
 		assert self._initialized, "Must initialize the wobbler before wait"
 		self._move(position)
 
@@ -107,6 +110,7 @@ class wobbler:
 			if not moving: sleep(.1)
 
 	def wait(self):
+		"""Wait until motionless"""
 		assert self._initialized, "Must initialize the wobbler before wait"
 		self._wait()
 
@@ -156,6 +160,7 @@ class wobbler:
 		return int(tmp[0])
 
 	def query_position(self):
+		"""Ask its own position"""
 		assert self._initialized, "Must first initialize the wobbler"
 		return self._query_position()
 
@@ -188,6 +193,7 @@ class wobbler:
 		self._initialized=False
 
 	def send(self,cmd):
+		"""Send a message"""
 		assert self._initialized, "Must first initialize the wobbler"
 		self._send(cmd)
 

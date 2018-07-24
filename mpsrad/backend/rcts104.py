@@ -15,16 +15,6 @@ from . import dummy_backend
 
 class rcts104:
 	""" Interactions with CTS functionality
-
-	Functions:
-		init:
-			Initialize the machine by locking onto it
-		close:
-			Remove the lock of the machine
-		run:
-			Runs the machine and fills requested channel
-		save_data:
-			Saves data to file
 	"""
 	def __init__(self,
 			name="rcts104",
@@ -55,6 +45,8 @@ class rcts104:
 
 
 	def _pc104connect(self):
+		"""Initialize the machine by locking onto it
+		"""
 		assert not self._initialized, "Cannot init an initialized CTS"
 
 		# Socket
@@ -91,6 +83,8 @@ class rcts104:
 	init=_pc104connect
 
 	def _pc104disconnect(self):
+		"""Remove the lock of the machine
+		"""
 		assert self._initialized, "Cannot close an uninitialized CTS"
 		self._socket.close()
 		del self._data
@@ -112,6 +106,7 @@ class rcts104:
 
 	def run(self):
 		"""Runs the CTS
+
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"
@@ -123,6 +118,7 @@ class rcts104:
 
 	def get_data(self, i=0):
 		"""Runs the CTS
+
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"
@@ -151,7 +147,8 @@ class rcts104:
 
 	def save_data(self, basename="/home/dabrowski/data/test/CTS", file=None,
 			binary=True):
-		"""Saves data to file at basename+file
+		"""Saves data to file at basename+file.
+
 		If file is None, the current time is used to create the filename
 		Saves with numpy binary format if binary is true or as ascii otherwise
 		"""
