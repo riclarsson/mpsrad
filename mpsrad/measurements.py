@@ -41,6 +41,61 @@ class measurements:
 		spectrometer_hosts=['sofia4'], spectrometer_tcp_ports=[1788],
 		spectrometer_udp_ports=[None]):
 
+		"""
+		Parameters:
+			sweep (boolean):
+				**INFO**
+			freq (int):
+				Set the frequency of the device
+			freq_step (float):
+				Set the frequency step 
+			if_offset (int):
+				**INFO**
+			full_file (int):
+				Must be a multiple of 4
+			repeat (boolean):
+				**INFO**
+			wait (int):
+				**INFO**
+			freq_range (tuple):
+				Range of frequencies available
+			wobbler_device (str):
+				wobbler device's path
+			wobbler_address (str):
+				wobbler's address
+			wiltron68169B_address (int):
+				wiltron68169B's address
+			chopper_device (str):
+				chopper device's path
+			antenna_offset (int):
+				**INFO**
+			dbr_port (int):
+				Port to connect with the dbr
+			dbr_server (str):
+				Name of the dbr's server
+			integration_time (int):
+				**INFO**
+			blank_time (int):
+				**INFO**
+			mode (str):
+				**INFO**
+			basename (str):
+				**INFO**
+			raw_formats (list):
+				list of format for the files
+			formatnames (list):
+				list of format name for files
+			spectrometer_channels (list):
+				list of channels for the spectrometer
+			spectrometers (list):
+				list of spectrometer
+			spectrometer_hosts (list):
+				list of host names
+			spectrometer_tcp_ports (list):
+				list of tcp port
+			spectrometer_udp_ports (list):
+				list of udp ports
+		"""
 		assert not (full_file % 4), "Must have full series in file"
 		assert wait >= 0.0, "Cannot have negative waiting time"
 
