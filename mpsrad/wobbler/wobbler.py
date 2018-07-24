@@ -12,7 +12,17 @@ from time import time,sleep
 from mpsrad.helper import serialCheck
 
 class wobbler:
+	"""Wobbler control library"""
 	def __init__(self,device='/dev/wobbler',baud=9600,address=b'0'):
+		"""
+		Parameters:
+			device (str):
+				Wobbler device's path
+			baud (int):
+				Transmission speed
+			address (str):
+				Address of the machine
+		"""
 		self._initialized=False
 
 		# Set device
@@ -35,6 +45,8 @@ class wobbler:
 
 	def init(self,position):
 		"""Set the connection to the device
+
+		Musn't be initialized already
 		"""
 		assert not self._initialized, "Cannot init initialized wobbler"
 		checkserial=serialCheck.serialcheck()  #make sure to use pyserial
@@ -71,9 +83,23 @@ class wobbler:
 		self._initialized=True
 
 	def get_recommended_relative_motion(self,integration_time):
+		"""
+		Parameters:	
+			integration_time (float or int):
+				**INFO**
+		"""
 		return int(integration_time/self._dt/100.)*100+100
 
 	def get_recommended_movements(self,integration_time,le=4,st=1):
+		"""
+		Parameters:	
+			integration_time (float or int):
+				**INFO**
+			le (int):
+				**INFO**	
+			st (int):
+				**INFO**
+		"""
 		ds=self.get_recommended_relative_motion(integration_time)
 		position=self._pos*1
 		if position-self._maxpos//2>0: ds*=-1
@@ -90,7 +116,10 @@ class wobbler:
 		return p
 
 	def move(self,position):
-		"""Move the device"""
+		"""Move the device to the new position
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must initialize the wobbler before wait"
 		self._move(position)
 
@@ -110,7 +139,10 @@ class wobbler:
 			if not moving: sleep(.1)
 
 	def wait(self):
-		"""Wait until motionless"""
+		"""Wait until motionless
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must initialize the wobbler before wait"
 		self._wait()
 
@@ -136,17 +168,27 @@ class wobbler:
 		return 0
 
 	def breaks(self):
-		""" Send break to machine"""
+		""" Send break to machine
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must initialize the wobbler before break"
 		self._send("B")
 
 	def halt(self):
-		""" Send halt/stop to machine"""
+		""" Send halt/stop to machine
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		self._send("H")
 	stop=halt
 
 	def query_frequency(self):
+		"""Ask the machine for the frequency it is moving with
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		return self._query_frequency()
 
@@ -160,7 +202,10 @@ class wobbler:
 		return int(tmp[0])
 
 	def query_position(self):
-		"""Ask its own position"""
+		"""Ask its own position
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		return self._query_position()
 
@@ -176,7 +221,10 @@ class wobbler:
 #		ext_stat,stat,cs=self._read()
 
 	def reset(self):
-		""" Return the machine to its positive initialization position"""
+		""" Return the machine to its positive initialization position
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 
 		self._send("CR")	# hardware reset
@@ -187,13 +235,23 @@ class wobbler:
 		self._wait_until_motionless()
 
 	def close(self):
-		""" Close the device access"""
+		""" Close the device access
+
+		Must be initialized to be closed.
+		"""
 		assert self._initialized, "Cannot close uninitialized wobbler"
 		self._serial.close()
 		self._initialized=False
 
 	def send(self,cmd):
-		"""Send a message"""
+		"""Send a message
+		
+		Parameters:
+			cmd (str):
+				command to send
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		self._send(cmd)
 
@@ -215,6 +273,13 @@ class wobbler:
 		self._serial.write(stx+message+etx)
 
 	def read(self,timeout=.5):
+		"""
+		Parameters:
+			timeout (float):
+				**INFO**
+
+		Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		return self._read(timeout)
 

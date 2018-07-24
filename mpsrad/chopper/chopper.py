@@ -16,6 +16,13 @@ from mpsrad.helper import serialCheck
 
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
+		"""
+		Parameters:
+			device (str):
+				chopper device's path
+			offset (int):
+				**info**
+		"""
 		# Lock-check
 		self._initialized=False
 		self._device=device
@@ -55,7 +62,10 @@ class chopper:
 		return self.set_pos(pos)
 
 	def set_pos(self,new_pos):
-		"""Sets the device pointing towards selected direction"""
+		"""Sets the device pointing towards selected direction
+
+		Must be initialized already.
+		"""
 		if isinstance(new_pos,str): new_pos=new_pos.encode()
 		assert self._initialized, "Must first initialize the chopper"
 		old_pos=self.get_pos()
@@ -79,6 +89,8 @@ class chopper:
 
 	def init(self):
 		"""Connection with the chopper and set the device access
+
+		Musn't be initialized already.
 		"""
 		try:
 			assert not self._initialized, "Cannot init initialized chopper"

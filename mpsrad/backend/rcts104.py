@@ -25,7 +25,25 @@ class rcts104:
 			integration_time=1000,
 			blank_time=None,
 			data_storage_containers=4):
-
+		"""
+		Parameters:
+			name (any):
+				Name of the mahcine (unused, kept as housekeeping)
+			host (str):
+				Name of the host, IP or DNS
+			tcp_port (str):
+				First port to communicate with the FW spectrometer
+			udp_port (str):
+				Second port to communicate with the FW spectrometer
+			channels (array of int):
+				Numbers of channel to **info**
+			integration_time (int):
+				**info**
+			blank_time (int):
+				**info**
+			data_storage_containers (int):
+				**info**
+		"""
 		self.name=name
 
 		# Lock-check
@@ -46,6 +64,8 @@ class rcts104:
 
 	def _pc104connect(self):
 		"""Initialize the machine by locking onto it
+
+		Musn't be initialized already.
 		"""
 		assert not self._initialized, "Cannot init an initialized CTS"
 
@@ -93,6 +113,8 @@ class rcts104:
 
 
 	def send_cmd(self,command):
+		"""Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the CTS"
 		return self._send_cmd(command)
 
@@ -107,6 +129,8 @@ class rcts104:
 	def run(self):
 		"""Runs the CTS
 
+		Must be initialized already
+
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"
@@ -119,6 +143,8 @@ class rcts104:
 	def get_data(self, i=0):
 		"""Runs the CTS
 
+		Must be initialized already
+		
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"

@@ -27,6 +27,25 @@ class FW:
 			integration_time=1000,
 			blank_time=1,
 			data_storage_containers=4):
+		"""
+		Parameters:
+			host (str):
+				Name of the host, IP or DNS
+			tcp_port (str):
+				First port to communicate with the FW spectrometer
+			udp_port (str):
+				Second port to communicate with the FW spectrometer
+			channels (array of int):
+				Numbers of channel to **info**
+			name (any):
+				Name of the mahcine (unused, kept as housekeeping)
+			integration_time (int):
+				**info**
+			blank_time (int):
+				**info**
+			data_storage_containers (int):
+				**info**
+		"""
 		assert isinstance(integration_time,int),"Integration in integers"
 		assert integration_time < 5001,"5000 ms integration time is maximum"
 
@@ -47,6 +66,8 @@ class FW:
 
 	def init(self):
 		"""Connects to the machine and initialized how it will be run
+
+		Musn't be initialized already
 		"""
 		assert not self._initialized,"Cannot init initialized FFTS"
 
@@ -101,6 +122,8 @@ class FW:
 
 	def run(self):
 		"""Runs the machine and fills requested channel
+
+		Must be initialized already and not have data not download.
 		"""
 		assert self._initialized,"Cannot run uninitialized FFTS"
 		assert not self._sent,"Cannot resend data,download first"
@@ -109,6 +132,13 @@ class FW:
 		self._sent=True
 
 	def get_data(self,i=0):
+		"""
+		Must be initialized already and have data
+
+		Parameter:
+			i (int):
+				index of **what**
+		"""
 		assert self._initialized,"Cannot run uninitialized FFTS"
 		assert i < self._copies_of_vectors and i > -1,"Bad index"
 		assert self._sent,"Cannot download data before running machine"
@@ -126,8 +156,9 @@ class FW:
 	def save_data(self,basename="/home/waspam/data/test/FW",binary=True):
 		"""Saves data to file at basename+filename.
 
-		Uses last access-time to server socket as filename
-		Saves with numpy binary format if binary is true or as ascii otherwise
+		Uses last access-time to server socket as filename.
+
+		Saves with numpy binary format if binary is true or as ascii otherwise.
 		"""
 		assert self._initialized,"No data exists for an uninitialized FFTS"
 		assert len(self._time),"Must call run() succesfully to save data"
@@ -141,6 +172,8 @@ class FW:
 
 	def close(self):
 		"""Disconnect from both servers of the AFFTS and sends stop to AFFTS
+
+		Must be initialized to be closed.
 		"""
 		assert self._initialized,"Cannot close uninitialized FFTS"
 

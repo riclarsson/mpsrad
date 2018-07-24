@@ -16,6 +16,13 @@ class Agilent34970A:
 	"""Reads sensors connected to Agilent 34970A multimeter
 	"""
 	def __init__(self,device='/dev/ttyS0',baud=57600):
+		"""
+		Parameters:
+			device (str):
+				agilent device's path
+			baud (int):
+				transmission speed
+		"""
 		self._initialized=False
 		self._device=device
 		self._baud=baud
@@ -49,6 +56,8 @@ class Agilent34970A:
 
 	def init(self):
 		"""Set the connection with the device
+
+		Musn't be initialized already.
 		"""
 		assert not self._initialized, "Cannot init initialized multimeter"
 		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
@@ -61,6 +70,8 @@ class Agilent34970A:
 
 	def close(self):
 		"""Close the connection with the device
+
+		Must be initialized already
 		"""
 		assert self._initialized, "Cannot close uninitialized multimeter"
 		self._measureThread.close()
@@ -69,14 +80,25 @@ class Agilent34970A:
 		self._initialized=False
 
 	def read(self):
+		"""read **info**
+		"""
 		return self._serial.readline().replace(b'\r\n',b'')
 
 	def write(self,cmd):
+		"""write **info**
+		"""
 		if isinstance(cmd,str): cmd=cmd.encode()
 		self._serial.flushInput()
 		self._serial.write(cmd+b'\n')
 
 	def ask(self,cmd,timeout=2):
+		"""
+		Parameters:
+			cmd (str):
+				command to send
+			timeout (int):
+				**info**
+		"""
 		while self._serial.in_waiting==0:
 			self.write(cmd)
 			t0=time()
@@ -85,6 +107,7 @@ class Agilent34970A:
 		return self.read()
 
 	def configMultimeter(self):
+		"""**info**"""
 		self.write("\x03")		# reset instrument (Device Clear)
 		assert b'34970A' in self.ask("*IDN?"), "Multimeter is not answering"
 
@@ -133,11 +156,13 @@ class Agilent34970A:
 		self.write("ROUTE:SCAN (@101,102,103,104,105,106,107,108,109,114,115,116,117,118,119)")
 
 	def getSensors(self):
+		"""**info**"""
 		ch=[n for n in self._channels if n is not None]
 		return [f(v) for f,v in zip(ch,self._values)]
 
 	# checks if valves are open (channels are closed)
 	def getStatus(self):
+		"""**INFO**"""
 		self._measureThread._input="ROUTE:CLOSE? (@201:220)"
 
 		# wait until executed
@@ -147,6 +172,13 @@ class Agilent34970A:
 		return answer
 
 	def setRelais(self,rel_nr=1,opening=True):
+		"""
+		Parameters:
+			rel_nr (int):
+				**INFO**
+			opening (boolean):
+				**INFO**
+		"""
 		# open relais, close valve
 		if opening: self._measureThread._input="ROUTE:OPEN (@%d)"%(200+rel_nr)
 		# close relais, open valve
@@ -156,12 +188,27 @@ class Agilent34970A:
 		while self._measureThread._input is not None: sleep(.1)
 
 	def closeValve(self,nr):
+		"""
+		Parameters:
+			nr (**INFO**):
+				**INFO**
+		"""
 		self.setRelais(nr,True)
 
 	def openValve(self,nr):
+		"""
+		Parameters:
+			nr (**INFO**):
+				**INFO**
+		"""
 		self.setRelais(nr,False)
 
 	def CY7_Temperature(self,v):
+		"""
+		Parameters:
+			v (**INFO**):
+				**INFO**
+		"""
 		Voltage=[
 			0.09062,0.10191,0.12547,0.14985,0.17464,0.19961,0.22463,0.24963,0.27456,0.29941,
 			0.32416,0.34881,0.37337,0.39783,0.42221,0.44647,0.47069,0.49484,0.51892,0.54294,
@@ -194,6 +241,11 @@ class Agilent34970A:
 		return float(spl(v/5.))
 
 	def PT100_Temperature(self,R):
+		"""
+		Parameters:
+			R (int or float):
+				**INFO**
+		"""
 		if R<18.5: return -999.999;	# underrange
 		if R>150.0: return 999.999	# overrange
 
@@ -207,10 +259,19 @@ class Agilent34970A:
 		return temp
 
 	def PT1000_Temperature(self,R):
+		"""
+		Parameters:
+			R (int or float):
+				**INFO**
+		"""
 		return self.PT100_Temperature(R/10.)
 
 	def PKR251_Pressure(self,v):
 		"""
+		Parameters:
+			v (**INFO**):
+				**INFO**
+		
 		+---------------+----------------------------------+
 		| Voltage U     | Pressure p                       |
 		|  [V]          |  [mbar]      [Torr]      [Pa]    |
@@ -259,6 +320,10 @@ class Agilent34970A:
 
 	def PKR251_Identification(self,v):
 		"""
+		Parameters:
+			v (**INFO**):
+				**INFO**
+		
 		+---------------+-----------------------------------+
 		|   Voltage U   | Identification                    |
 		|     [V]       |                                   |
@@ -278,7 +343,10 @@ class Agilent34970A:
 
 
 class measureThread(Thread):
+	"""For more information about the Thread’s methods and attributes used here, please refer to the `threading.Thread class documentation <https://docs.python.org/3/library/threading.html>`_
+	"""
 	def __init__(self,parent):
+		
 		Thread.__init__(self)
 		self.parent=parent
 		self.read=parent.read
@@ -294,6 +362,7 @@ class measureThread(Thread):
 		self._initialized=False
 
 	def run(self):
+		"""**INFO**"""
 		self.running=True
 
 		while self._initialized:
