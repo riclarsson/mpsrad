@@ -41,7 +41,8 @@ class measurements:
 		spectrometer_hosts=['sofia4'], spectrometer_tcp_ports=[1788],
 		spectrometer_udp_ports=[None]):
 
-		"""
+		""" Initialize the machine
+
 		Parameters:
 			sweep (boolean):
 				**INFO**

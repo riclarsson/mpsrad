@@ -6,8 +6,6 @@
 .. autoclass:: {{ objname }}
 
    {% block methods %}
-   .. automethod:: __init__
-      :noindex:
 
    {% if methods %}
    .. rubric:: Methods
