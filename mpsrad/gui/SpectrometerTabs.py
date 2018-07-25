@@ -26,7 +26,7 @@ from scipy.signal import savgol_filter
 class cPlot(CurvePlot):
 	"""Curves plot configuration
 	
-	For more information about the CurvePlot's methods and attributes used here, please refer to the `CurvePlot documentation <https://pythonhosted.org/guiqwt/reference/curve.html#guiqwt.curve.CurvePlot>`_
+	.. note:: For more information about the CurvePlot's methods and attributes used here, please refer to the `CurvePlot documentation <https://pythonhosted.org/guiqwt/reference/curve.html#guiqwt.curve.CurvePlot>`_
 	"""
 	def __init__(self,axis=None,updateWidgets=None,*args,**kwargs):
 		CurvePlot.__init__(self,*args,**kwargs)
@@ -118,7 +118,8 @@ class cPlot(CurvePlot):
 
 # Modified CurveItem (added filter and autoscale) =============================
 class cItem(CurveItem):
-	"""For more information about the CurveItem's methods and attributes used here, please refer to the `CurveItem documentation <https://pythonhosted.org/guiqwt/reference/curve.html#guiqwt.curve.CurveItem>`_
+	"""
+	.. note:: For more information about the CurveItem's methods and attributes used here, please refer to the `CurveItem documentation <https://pythonhosted.org/guiqwt/reference/curve.html#guiqwt.curve.CurveItem>`_
 	"""
 	def __init__(self,filterfun=lambda y: y,*args,**kwargs):
 		CurveItem.__init__(self,*args,**kwargs)
@@ -143,7 +144,8 @@ class cItem(CurveItem):
 
 # Filter widget ===============================================================
 class FilterWidget(DataSetEditGroupBox):
-	"""For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
+	"""
+	.. note:: For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
 	"""
 	class params(DataSet):
 		Order=IntItem("Order",default=1).set_pos(col=0)
@@ -161,7 +163,8 @@ class FilterWidget(DataSetEditGroupBox):
 
 # Set axis ranges widget ======================================================
 class XYlim(DataSetEditGroupBox):
-	"""For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
+	"""
+	.. note:: For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
 	"""
 	class minmax(DataSet):
 		Xmin=FloatItem("X min",default=1.,unit="").set_prop("display",format="%3.1f").set_pos(col=0)
@@ -191,7 +194,7 @@ class XYlim(DataSetEditGroupBox):
 class SpectrometerPanel(QSplitter):
 	"""Modified CurvePlot class (with mouse zoom and pan)
 
-	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	.. note:: For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
 	"""
 	def __init__(self,parent,spec=None,axisLimits=[0,40,0,400],
 		plots=[
@@ -317,7 +320,7 @@ class SpectrometerPanel(QSplitter):
 class SpectrometerTabs(QTabWidget):
 	"""Tab of the interface to display the different curves
 
-	For more information about the QTabWidget's methods and attributes used here, please refer to the `QTabWidget documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtabwidget.html>`_
+	.. note:: For more information about the QTabWidget's methods and attributes used here, please refer to the `QTabWidget documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtabwidget.html>`_
 	"""
 	def __init__(self,parent,spec=[],autoX=lambda:False,autoY=lambda:False):
 		QTabWidget.__init__(self)

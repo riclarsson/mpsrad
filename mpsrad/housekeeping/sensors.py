@@ -18,6 +18,11 @@ class sensors:
 	"""Get the temperature of various external sensors in order to store as housekeeping data
 	"""
 	def __init__(self,device='/dev/sensors'):
+		"""
+		Parameters:
+			device (str):
+				sensors device's path
+		"""
 		# Lock-check
 		self._initialized=False
 		self._device=device
@@ -43,6 +48,8 @@ class sensors:
 
 	def init(self):
 		"""Set the connection to the device
+
+		Musn't be initialized already.
 		"""
 		assert not self._initialized, "Cannot init initialized sensors"
 		checkserial=serialCheck.serialcheck()	#make sure to use pyserial

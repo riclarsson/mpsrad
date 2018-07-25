@@ -41,6 +41,61 @@ class measurements:
 		spectrometer_hosts=['sofia4'], spectrometer_tcp_ports=[1788],
 		spectrometer_udp_ports=[None]):
 
+		"""
+		Parameters:
+			sweep (boolean):
+				**INFO**
+			freq (int):
+				Set the frequency of the device
+			freq_step (float):
+				Set the frequency step 
+			if_offset (int):
+				**INFO**
+			full_file (int):
+				Must be a multiple of 4
+			repeat (boolean):
+				**INFO**
+			wait (int):
+				**INFO**
+			freq_range (tuple):
+				Range of frequencies available
+			wobbler_device (str):
+				wobbler device's path
+			wobbler_address (str):
+				wobbler's address
+			wiltron68169B_address (int):
+				wiltron68169B's address
+			chopper_device (str):
+				chopper device's path
+			antenna_offset (int):
+				**INFO**
+			dbr_port (int):
+				Port to connect with the dbr
+			dbr_server (str):
+				Name of the dbr's server
+			integration_time (int):
+				**INFO**
+			blank_time (int):
+				**INFO**
+			mode (str):
+				**INFO**
+			basename (str):
+				**INFO**
+			raw_formats (list):
+				list of format for the files
+			formatnames (list):
+				list of format name for files
+			spectrometer_channels (list):
+				list of channels for the spectrometer
+			spectrometers (list):
+				list of spectrometer
+			spectrometer_hosts (list):
+				list of host names
+			spectrometer_tcp_ports (list):
+				list of tcp port
+			spectrometer_udp_ports (list):
+				list of udp ports
+		"""
 		assert not (full_file % 4), "Must have full series in file"
 		assert wait >= 0.0, "Cannot have negative waiting time"
 
@@ -112,6 +167,10 @@ class measurements:
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
+
+		Parameters:
+			wobbler_position (int):
+				Initial version of the wobbler
 		"""
 		assert not self._initialized, "Cannot reinitialize measurement series"
 		try:
@@ -168,22 +227,22 @@ class measurements:
 		"""Run the measurements and append data.  If any failure, close all
 
 		Sets housekeeping to 16 numbers as:
-		0: Cold-load temperature
-		1: 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
-		2: 0,  # COULD BE SET TO 2M AIR TEMPERATURE
-		3: 0,  # COULD BE SET TO 2M AIR RH
-		4: 0,  # COULD BE SET TO GROUND MAGNETOMETER
-		5: Integration time in miliseconds
-		6: B2 temperature
-		7: B3 temperature
-		8: 77K-plate temperature
-		9: 15K-plate temperature
-		10: 4K-plate temperature
-		11: B2 requested LO
-		12: B3 requested LO
-		13: Reference LO
-		14: Requested frequency
-		15: Requested intermediate frequency
+		   - 0 : Cold-load temperature
+		   - 1 : 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
+		   - 2 : 0,  # COULD BE SET TO 2M AIR TEMPERATURE
+		   - 3 : 0,  # COULD BE SET TO 2M AIR RH
+		   - 4 : 0,  # COULD BE SET TO GROUND MAGNETOMETER
+		   - 5 : Integration time in miliseconds
+		   - 6 : B2 temperature
+		   - 7 : B3 temperature
+		   - 8 : 77K-plate temperature
+		   - 9 : 15K-plate temperature
+		   - 10 : 4K-plate temperature
+		   - 11 : B2 requested LO
+		   - 12 : B3 requested LO
+		   - 13 : Reference LO
+		   - 14 : Requested frequency
+		   - 15 : Requested intermediate frequency
 		"""
 		assert self._initialized, "Cannot run uninitialized measurement series"
 		try:
@@ -253,11 +312,17 @@ class measurements:
 			raise RuntimeError("Unexpected runtime error in run")
 
 	def get_order(self):
+		"""
+		Return:
+			**INFO**
+		"""
 		return [l.__name__.replace('set_','')[0].upper() for l in self.order]
 
 
 	def save(self):
 		"""Save the CAHA series to the provided files
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot save uninitialized measurement "
 								"series")
@@ -278,6 +343,8 @@ class measurements:
 
 	def update(self):
 		"""Keep track of counts to either change frequency or filename
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update uninitialized measurement "
 			"series")
@@ -297,6 +364,8 @@ class measurements:
 
 	def update_freq(self):
 		"""Update the frequency to the next choosen level.
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update frequency of uninitialized "
 			"measurement series")
@@ -319,6 +388,8 @@ class measurements:
 
 	def set_filenames(self):
 		"""Set the names of the files to write to
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set filename of uninitialized "
 			"measurement series")
@@ -340,6 +411,12 @@ class measurements:
 
 	def set_frequency(self, freq):
 		"""Set the frequency of the measurement.  Keeps track of IF
+
+		Parameters: 
+			freq (float):
+				Frequency of the measurement
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set frequenct of uninitialized "
 			"measurement series")

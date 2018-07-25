@@ -4,15 +4,14 @@ Graphical User Interface package
 GUI interface
 `````````````
 
+Here are the different functions to call all the GUI modules
+
 .. automodule:: mpsrad.gui
 
    .. autofunction:: start
 
 GUI module
 ``````````
-
-GUI interface
-`````````````
 
 .. automodule :: mpsrad.gui.gui
 

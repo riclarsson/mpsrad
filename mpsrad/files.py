@@ -99,6 +99,15 @@ class calibration(_files):
     """Calibrates raw data"""
     def __init__(self, format=eform,
                  t_cold=21, t_hot=295):
+        """
+        Parameters:
+            format (str):
+                set the format of the file. Either eform or aform
+            t_cold (int):
+                **INFO**
+            t_hot (int):
+                **INFO**
+        """
         assert format[0] == '>', "Must use big-endian to read and store data"
         assert format[1] == 'i', "Must use index time-stamp as first variable"
 
@@ -112,6 +121,13 @@ class calibration(_files):
         self._get_format(format)
 
     def calibrate(self, sweep_count=None, with_hkp=False):
+        """
+        Parameters:
+            sweep_count (None type):
+                **INFO**
+            with_hkp (boulean):
+                **INFO**
+        """
         # Delete mismatching data
         while len(self._raw) % 2:
             del self._raw[-1]
@@ -196,6 +212,11 @@ class calibration(_files):
             count += 1
 
     def save(self, filename=None):
+        """
+        Parameters:
+            filename (str or None type):
+                Name of the file
+        """ 
         if not filename:
             filename = self._filename
 
@@ -215,7 +236,15 @@ class calibration(_files):
 
 
 class averaging(_files):
+    """**INFO**"""
     def __init__(self, format=eform, error_range=(50, 250)):
+        """
+        Parameters:
+            format (str):
+                set the format of the file. Either eform or aform
+            error_range (tuple):
+                **INFO**
+        """
         assert format[0] == '>', "Must use big-endian to read and store data"
         assert format[1] == 'i', "Must use index time-stamp as first variable"
 
@@ -227,6 +256,15 @@ class averaging(_files):
 
     def average_single(self, number_of_spectra=100, number_of_xbin=2,
                        running_average=False):
+        """
+        Parameters:
+            number_of_spectra (int):
+                **INFO**
+            number_of_xbin (int):
+                **INFO**
+            running_average (boolean):
+                **INFO**
+        """
         # Storage variables
         self._data = []
         self._time = []
@@ -287,6 +325,11 @@ class averaging(_files):
             d /= number_of_spectra
 
     def average_sweep(self, number_of_xbin=2):
+        """
+        Parameters:
+            number_of_xbin (int):
+                **INFO**
+        """
         # Storage variables
         self._data = []
         self._time = []
@@ -358,6 +401,11 @@ class averaging(_files):
             self._data[i] /= count[i]
 
     def mean(self, number_of_xbin=4):
+        """
+        Parameters:
+            number_of_xbin (int):
+                **INFO**
+        """
         self._time = [self._rawtime[0], self._rawtime[-1]]
 
         # Calibration loop
@@ -387,6 +435,11 @@ class averaging(_files):
         self._data = self._data.reshape(s).mean(axis=1)
 
     def save(self, filename=None):
+        """
+        Parameters:
+            filename (str or None type):
+                Name of the file where to save
+        """ 
         if not filename:
             filename = self._filename
 
@@ -404,6 +457,25 @@ class averaging(_files):
     def save_movie(self, filename, ylim=None, xlim=None, fps=60,
                    artist='Average', title='Spectral Data',
                    xbin_name='bins', xdata=None):
+        """
+        Parameters:
+            filename (str):
+                Name of the file where to save
+            ylim (None type):
+                **INFO**
+            xlim (None type):
+                **INFO**
+            fps (int):
+                Number of image per second
+            artist (str):
+                **INFO**
+            title (str):
+                Title of the movie
+            xbin_name (str):
+                **INFO**
+            xdata (str):
+                **INFO**
+        """
         ffmpeg = animation.writers['ffmpeg']
         metadata = dict(title=title, artist=artist)
         writer = ffmpeg(fps=fps, metadata=metadata)
@@ -445,7 +517,13 @@ class averaging(_files):
 
 
 class raw(_files):
+    """**INFO**"""
     def __init__(self, format=eform):
+        """
+        Parameters:
+            format (str):
+                set the format of the file. Either eform or aform
+        """
         assert format[0] == '>', "Must use big-endian to read and store data"
         assert format[1] == 'i', "Must use index time-stamp as first variable"
 
@@ -509,6 +587,17 @@ class raw(_files):
         return thot
 
     def append_to_file(self, filename, time, housekeeping, data):
+        """
+        Parameters:
+            filename (str):
+                Name of the file where to save
+            time (num):
+                **INFO**
+            housekeeping (**INFO**):
+                **INFO**
+            data (**INFO**):
+                **INFO**
+        """
         # print("appending time")
         p = struct.pack('>I', time)
 
