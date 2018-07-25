@@ -19,7 +19,7 @@ import sys,io
 class StatusBar(QStatusBar):
 	"""Configuration of the status bar
 
-	For more information about the QStatusBar' methods and attributes used here, please refer to the `QStatusBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qstatusbar.html>`_
+	.. note:: For more information about the QStatusBar' methods and attributes used here, please refer to the `QStatusBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qstatusbar.html>`_
 	"""
 	def __init__(self,getIcon,*args,**kwargs):
 		QStatusBar.__init__(self,*args,**kwargs)
@@ -70,7 +70,7 @@ class StatusBar(QStatusBar):
 class ToolBar(QToolBar):
 	"""Create the toolbar of the interface
 
-	For more information about the QToolBar's methods and attributes used here, please refer to the `QtoolBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtoolbar.html>`_
+	.. note:: For more information about the QToolBar's methods and attributes used here, please refer to the `QtoolBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtoolbar.html>`_
 	"""
 	def __init__(self,getIcon,measureInitToggle,measureStartStop):
 		QToolBar.__init__(self)

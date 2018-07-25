@@ -167,6 +167,10 @@ class measurements:
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
+
+		Parameters:
+			wobbler_position (int):
+				Initial version of the wobbler
 		"""
 		assert not self._initialized, "Cannot reinitialize measurement series"
 		try:
@@ -223,22 +227,22 @@ class measurements:
 		"""Run the measurements and append data.  If any failure, close all
 
 		Sets housekeeping to 16 numbers as:
-		0: Cold-load temperature
-		1: 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
-		2: 0,  # COULD BE SET TO 2M AIR TEMPERATURE
-		3: 0,  # COULD BE SET TO 2M AIR RH
-		4: 0,  # COULD BE SET TO GROUND MAGNETOMETER
-		5: Integration time in miliseconds
-		6: B2 temperature
-		7: B3 temperature
-		8: 77K-plate temperature
-		9: 15K-plate temperature
-		10: 4K-plate temperature
-		11: B2 requested LO
-		12: B3 requested LO
-		13: Reference LO
-		14: Requested frequency
-		15: Requested intermediate frequency
+		   - 0 : Cold-load temperature
+		   - 1 : 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
+		   - 2 : 0,  # COULD BE SET TO 2M AIR TEMPERATURE
+		   - 3 : 0,  # COULD BE SET TO 2M AIR RH
+		   - 4 : 0,  # COULD BE SET TO GROUND MAGNETOMETER
+		   - 5 : Integration time in miliseconds
+		   - 6 : B2 temperature
+		   - 7 : B3 temperature
+		   - 8 : 77K-plate temperature
+		   - 9 : 15K-plate temperature
+		   - 10 : 4K-plate temperature
+		   - 11 : B2 requested LO
+		   - 12 : B3 requested LO
+		   - 13 : Reference LO
+		   - 14 : Requested frequency
+		   - 15 : Requested intermediate frequency
 		"""
 		assert self._initialized, "Cannot run uninitialized measurement series"
 		try:
@@ -308,11 +312,17 @@ class measurements:
 			raise RuntimeError("Unexpected runtime error in run")
 
 	def get_order(self):
+		"""
+		Return:
+			**INFO**
+		"""
 		return [l.__name__.replace('set_','')[0].upper() for l in self.order]
 
 
 	def save(self):
 		"""Save the CAHA series to the provided files
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot save uninitialized measurement "
 								"series")
@@ -333,6 +343,8 @@ class measurements:
 
 	def update(self):
 		"""Keep track of counts to either change frequency or filename
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update uninitialized measurement "
 			"series")
@@ -352,6 +364,8 @@ class measurements:
 
 	def update_freq(self):
 		"""Update the frequency to the next choosen level.
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update frequency of uninitialized "
 			"measurement series")
@@ -374,6 +388,8 @@ class measurements:
 
 	def set_filenames(self):
 		"""Set the names of the files to write to
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set filename of uninitialized "
 			"measurement series")
@@ -395,6 +411,12 @@ class measurements:
 
 	def set_frequency(self, freq):
 		"""Set the frequency of the measurement.  Keeps track of IF
+
+		Parameters: 
+			freq (float):
+				Frequency of the measurement
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set frequenct of uninitialized "
 			"measurement series")

@@ -32,7 +32,7 @@ from mpsrad.measureThread import measure
 class CentralWidget(QSplitter):
 	"""Main construction of the interface
 
-	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	.. note:: For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
 	"""
 	def __init__(self,parent):
 		QSplitter.__init__(self,parent)
@@ -74,7 +74,7 @@ class CentralWidget(QSplitter):
 class MainWindow(QMainWindow):
 	"""Launch the setup and display the interface window
 
-	For more information about the QMainWindow's methods and attributes used here, please refer to the `QMainWindow documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qmainwindow.html>`_
+	.. note:: For more information about the QMainWindow's methods and attributes used here, please refer to the `QMainWindow documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qmainwindow.html>`_
 	"""
 	def __init__(self):
 		QMainWindow.__init__(self)

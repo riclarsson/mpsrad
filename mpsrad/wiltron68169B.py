@@ -15,14 +15,8 @@ class wiltron68169B:
 	Loads the shared wiltron-library as ../lib/libwiltron68169B.so on import
 	and handles translation of python input to ctypes and ctypes output to
 	python-readable variables
-
-	Functions:
-		ask_name:
-			Asks the name (to see it there is a response)
-
-		set_frequency:
-			Sets the frequency to provided GHz
 	"""
+
 	def __init__(self, address=5, host='gpib', tcp_port=1234,
 			timeout=.5, name="wiltron68169B-python"):
 		self._initialized=False
@@ -34,6 +28,8 @@ class wiltron68169B:
 		self._host=host
 
 	def ask_name(self):
+		"""Asks the name (to see it there is a response)
+		"""
 		# Connect
 		s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 		s.connect((self._host,self._tcp_port))
@@ -68,17 +64,33 @@ class wiltron68169B:
 
 
 	def init(self):
+		"""Initialize the wiltron local oscillator
+
+		Wiltron mustn't be initialized already.
+		"""
 		assert not self._initialized, "Cannot init initialized Wiltron"
 
 		self.ask_name()
 		self._initialized=True
 
 	def close(self):
+		"""Close the connection
+
+		Wiltron must be initialized already.
+		"""
 		assert self._initialized, "Cannot close an uninitialized Wiltron"
 		self.ask_name()
 		self._initialized=False
 
 	def set_frequency(self, freq):
+		"""Sets the frequency to provided GHz
+
+		Parameters:
+			freq (int or float):
+				Frequency of the local oscillator
+
+		Wiltron must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the Wiltron"
 
 		# Connect

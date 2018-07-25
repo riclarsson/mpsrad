@@ -343,7 +343,8 @@ class Agilent34970A:
 
 
 class measureThread(Thread):
-	"""For more information about the Thread’s methods and attributes used here, please refer to the `threading.Thread class documentation <https://docs.python.org/3/library/threading.html>`_
+	"""
+	.. note:: For more information about the Thread’s methods and attributes used here, please refer to the `threading.Thread class documentation <https://docs.python.org/3/library/threading.html>`_
 	"""
 	def __init__(self,parent):
 		
