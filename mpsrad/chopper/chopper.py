@@ -92,18 +92,15 @@ class chopper:
 
 		Musn't be initialized already.
 		"""
-		try:
-			assert not self._initialized, "Cannot init initialized chopper"
-			checkserial=serialCheck.serialcheck()	#make sure to use pyserial
-			self._serial=serial.Serial(self._device,115200,timeout=2)
+		assert not self._initialized, "Cannot init initialized chopper"
+		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
+		self._serial=serial.Serial(self._device,115200,timeout=2)
 
-			# get greetings
-			greetings=self._ask('G')
-			self._initialized=True
-			return greetings
-		except:
-			dummy_chop=dummy_chopper.dummy_chopper()
-
+		# get greetings
+		greetings=self._ask('G')
+		self._initialized=True
+		return greetings
+		
 	def _close_and_restore(self):
 		""" Close the device access"""
 		assert self._initialized, "Cannot close uninitialized chopper"

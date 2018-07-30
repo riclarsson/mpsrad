@@ -26,6 +26,8 @@ from mpsrad.gui.myBars import StatusBar,ToolBar
 
 from mpsrad.measurements import measurements
 from mpsrad.measureThread import measure
+
+from mpsrad.chopper import dummy_chopper
 # =============================================================================
 
 # Central widget (layout) =====================================================
@@ -102,9 +104,13 @@ class MainWindow(QMainWindow):
 		self.dbr.init()
 		self.sensors=sensors()
 		self.sensors.init()
-		self.chopper=chopper()
-		self.chopper.init()
 
+		try:
+			self.chopper=chopper()
+			self.chopper.init()
+		except:
+			print  ("Issue in chopper initialization, switch on the dummy chopper")
+			dum_chop=dummy_chopper.dummy_chopper.chopper_issue()
 		self.measureThread=measure(self)
 
 		self.timer=QTimer()

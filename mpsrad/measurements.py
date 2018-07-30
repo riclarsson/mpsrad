@@ -15,7 +15,8 @@ from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
-
+from .wobbler import dummy_wobbler
+from .chopper import dummy_chopper
 
 import time
 import datetime
@@ -176,17 +177,24 @@ class measurements:
 		assert not self._initialized, "Cannot reinitialize measurement series"
 		try:
 			print("Init wobbler")
-			self.wob.init(wobbler_position)  # Must set start position
+			try: self.wob.init(wobbler_position)  # Must set start position
+			except: 
+				print  ("Issue in wobbler initialization, switch on the dummy wobbler")
+				dumm_wob=dummy_wobbler.dummy_wobbler.wobbler_issue()
 
 			print("Init chopper")
-			self.chop.init()  # Can set nothing
+			try: self.chop.init()  # Can set nothing
+			except: 
+				print  ("Issue in chopper initialization, switch on the dummy chopper")
+				dum_chop=dummy_chopper.dummy_chopper.chopper_issue()
 
 			print("Init spectrometers")
 			for s in self.spec:
 				s.init()  # Can set nothing
 
 			print("Init LO")
-			self.lo.init()  # Does nothing but confirms connection
+			try: self.lo.init()  # Does nothing but confirms connection
+			except: pass
 
 			print("Init DBR")
 			self.dbr.init()  # Does nothing but confirms connection
@@ -206,16 +214,22 @@ class measurements:
 
 		try:
 			print("Setting wobbler motion pattern...")
-			self._wobbler_position=\
+			try:
+				self._wobbler_position=\
 				self.wob.get_recommended_movements(int(self._integration_time)
 												/ 1000.0)
-			print("Wobbler motion pattern is: "+str(self._wobbler_position))
-
-			print("Set frequency")
-			self.set_frequency(self._freq)
-
+				print("Wobbler motion pattern is: "+str(self._wobbler_position))
+			except:
+				print("Cannot set the wobbler motion patern, you're not connected to the wobbler")
+			
+			try:
+				print("Set frequency")
+				self.set_frequency(self._freq)
+			except:
+				print("Cannot set the frequency, you're not connected to the dbr")
+			
 			print("Set filename")
-			self.set_filenames()
+			self.set_filenames() 
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")

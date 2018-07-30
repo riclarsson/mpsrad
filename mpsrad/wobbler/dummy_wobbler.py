@@ -44,17 +44,12 @@ class dummy_wobbler:
 		self._minpos=0
 
 
-	def wobbler_issue (self):
-		assert not self._initialized
-		assert not issue, "Cannot be used without a problem"
-
-		print("Switch on a dummy wobbler...")
+	def wobbler_issue ():
 		time.sleep(1)
-		self._initialized=True
-
-	def close(self):
+		
+	def close():
 		assert self._initialized
-		print('Closing the dummy wobller')	
+		print('Closing the dummy wobbler')	
 		self._initialized=False
 
 		
