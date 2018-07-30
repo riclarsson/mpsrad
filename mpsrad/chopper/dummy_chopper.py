@@ -29,24 +29,9 @@ class dummy_chopper:
 		self._device=device
 		self._offset=offset
 
-	def chopper_issue (self):
-		assert not self._initialized
-		
-		print("Switch on a dummy chopper...")
-		'''
-		if issue_number==1 :
-			print('Failed to set cold')
-		elif issue_number==2 :
-			print('Failed to set ref')
-		elif issue_number==3 :
-			print('Failed to set hot')
-		elif issue_number==4 :
-			print('Failed to set ant')
-		'''
-
+	def chopper_issue ():
 		time.sleep(1)
-		self._initialized=True
-
+		
 	def close (self):
 		assert self._initialized
 		print('Closing the dummy chopper')
