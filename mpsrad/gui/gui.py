@@ -27,7 +27,7 @@ from mpsrad.gui.myBars import StatusBar,ToolBar
 from mpsrad.measurements import measurements
 from mpsrad.measureThread import measure
 
-from mpsrad.chopper import dummy_chopper
+from mpsrad.dummy_hardware import dummy_hardware
 # =============================================================================
 
 # Central widget (layout) =====================================================
@@ -108,14 +108,14 @@ class MainWindow(QMainWindow):
 			self.sensors=sensors()
 			self.sensors.init()
 		except:
-			self.dum_HK=dummy_chopper.dummy_hardware('housekeeping')
+			self.dum_HK=dummy_hardware('housekeeping')
 			self.dum_HK.init()
 
 		try:
 			self.chopper=chopper()
 			self.chopper.init()
 		except:
-			self.dum_chop=dummy_chopper.dummy_hardware('chopper')
+			self.dum_chop=dummy_hardware('chopper')
 			self.dum_chop.init()
 
 		self.measureThread=measure(self)
@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
 		try:
 			self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
 		except:
-			self.dum_dbr=dummy_chopper.dummy_hardware('dbr')
+			self.dum_dbr=dummy_hardware('dbr')
 			self.dum_dbr.issue('get_status')
 
 		if self.init: self.sBar.setInfo("Initialized","preview")

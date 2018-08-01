@@ -11,7 +11,6 @@ Controls the Chopper
 import serial
 
 from time import time,sleep
-from . import dummy_chopper
 from mpsrad.helper import serialCheck
 
 class chopper:

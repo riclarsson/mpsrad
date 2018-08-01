@@ -15,8 +15,7 @@ from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
-from .wobbler import dummy_wobbler
-from .chopper import dummy_chopper
+from . import dummy_hardware
 
 import time
 import datetime
@@ -179,13 +178,13 @@ class measurements:
 			print("Init wobbler")
 			try: self.wob.init(wobbler_position)  # Must set start position
 			except: 
-				self._dum_wob=dummy_chopper.dummy_hardware('wobbler')
+				self._dum_wob=dummy_hardware.dummy_hardware('wobbler')
 				self._dum_wob.init()
 
 			print("Init chopper")
 			try: self.chop.init()  # Can set nothing
 			except: 
-				self._dum_chop=dummy_chopper.dummy_hardware('chopper')
+				self._dum_chop=dummy_hardware.dummy_hardware('chopper')
 				self._dum_chop.init()
 
 			print("Init spectrometers")
@@ -193,7 +192,7 @@ class measurements:
 				for s in self.spec:
 					s.init()  # Can set nothing
 			except:
-				self._dum_spec=dummy_chopper.dummy_hardware('spectrometer')
+				self._dum_spec=dummy_hardware.dummy_hardware('spectrometer')
 				self._dum_spec.init()
 
 			print("Init LO")
@@ -206,7 +205,7 @@ class measurements:
 			print("Init thermometer")
 			try: self.temperature.init()  # Does nothing but confirms connection
 			except:
-				self._dum_HK=dummy_chopper.dummy_hardware('housekeeping')
+				self._dum_HK=dummy_hardware.dummy_hardware('housekeeping')
 				self._dum_HK.init()
 
 			print("All machines are initialized!")
@@ -275,8 +274,8 @@ class measurements:
 					# print("setting pointing")
 					self.order[i]()
 				except:
-					function=str(self.order[i])
-					self._dum_chop.issue(function)
+					function=self.order[i].__name__
+					self._dum_chop.run_issue(function)
 			
 				# print("adding time")
 				self._times.append(int(time.time()))
@@ -314,33 +313,33 @@ class measurements:
 					self._housekeeping[-1][14]=float(self._freq)
 					self._housekeeping[-1][15]=float(self._if)
 				except:
-					self._dum_HK.issue()
+					self._dum_HK.run_issue()
 
 				try:
 					debug_msg='wobbler_move'
-	#				print("moving wobbler")
+#					print("moving wobbler")
 					self.wob.move(self._wobbler_position[i])
 				except:
-					self._dum_wob.issue('move')
+					self._dum_wob.run_issue('move')
 				
 				try:
 					debug_msg='spec_run'
 #					print("telling to gather data")
 					for s in self.spec: s.run()
-				except: pass
+				except: self._dum_spec.run_issue('run')
 				
 				try:
 					debug_msg='get_data'
 #					print("downloading data")
 					for s in self.spec: s.get_data(i)
-				except: pass
+				except: self._dum_spec.run_issue('get_data')
 
 				try:
 					debug_msg='wobbler_wait'
-	#				print("waiting for wobbler")
+#					print("waiting for wobbler")
 					self.wob.wait()
 				except: 
-					self._dum_wob.issue('wait')
+					self._dum_wob.run_issue('wait')
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -368,10 +367,13 @@ class measurements:
 		try:
 			for i in range(4):
 				# Need to take into account multiple spectrometers sometime...
-				print('saving spectra '+str(self._i*4+i))
-				for j in range(self._spectrometers_count):
-					self.raw[j].append_to_file(self._files[j], self._times[i],
-						self._housekeeping[i],self.spec[j]._data[i][2:-2])
+				try:
+					print('saving spectra '+str(self._i*4+i))
+					for j in range(self._spectrometers_count):
+						self.raw[j].append_to_file(self._files[j], self._times[i],
+							self._housekeeping[i],self.spec[j]._data[i][2:-2])
+				except: self._dum_spec.save_issue()
+					
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
