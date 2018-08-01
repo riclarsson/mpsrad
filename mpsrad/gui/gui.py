@@ -100,17 +100,24 @@ class MainWindow(QMainWindow):
 		self.init=False
 		self.running=False
 
+
 		self.dbr=dbr()
 		self.dbr.init()
-		self.sensors=sensors()
-		self.sensors.init()
+
+		try:
+			self.sensors=sensors()
+			self.sensors.init()
+		except:
+			self.dum_HK=dummy_chopper.dummy_hardware('housekeeping')
+			self.dum_HK.init()
 
 		try:
 			self.chopper=chopper()
 			self.chopper.init()
 		except:
-			print  ("Issue in chopper initialization, switch on the dummy chopper")
-			dum_chop=dummy_chopper.dummy_chopper.chopper_issue()
+			self.dum_chop=dummy_chopper.dummy_hardware('chopper')
+			self.dum_chop.init()
+
 		self.measureThread=measure(self)
 
 		self.timer=QTimer()
@@ -170,8 +177,12 @@ class MainWindow(QMainWindow):
 	def updateTimer(self):
 		self.timer.stop()
 		self.time=localtime()
-
-		self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
+	
+		try:
+			self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
+		except:
+			self.dum_dbr=dummy_chopper.dummy_hardware('dbr')
+			self.dum_dbr.issue('get_status')
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")
@@ -209,7 +220,6 @@ def begin():
 	app=qapplication()
 	global window
 	window=MainWindow()
-	print('ok')
 	return(app,window)
 
 # =============================================================================

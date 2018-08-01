@@ -73,33 +73,30 @@ class rcts104:
 		self._socket=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 		# Connect to the machine
-		try :
-			self._socket.connect((self._host,self._tcp_port))
-			greetings=self._socket.recv(1024)
-			assert len(greetings)>0,\
-				"Failed to connect to "+self._host+":"+str(self._tcp_port)
+		self._socket.connect((self._host,self._tcp_port))
+		greetings=self._socket.recv(1024)
+		assert len(greetings)>0,\
+			"Failed to connect to "+self._host+":"+str(self._tcp_port)
 
-			parse=re.search(b"connected to (.+?) on (.+$)",greetings)
-			assert len(parse.groups())==2, "Failed to read the greetings"
+		parse=re.search(b"connected to (.+?) on (.+$)",greetings)
+		assert len(parse.groups())==2, "Failed to read the greetings"
 
-			self._hostname,self._stream=parse.group(1),parse.group(2)
+		self._hostname,self._stream=parse.group(1),parse.group(2)
 
-			# Initiate things on the machine
-			self._send_cmd(b"cts config datafile "+self._stream)
-			self._send_cmd(b"cts init time 1.0")
-			self._send_cmd(b"cts init time %.4f"%self._runtime)
+		# Initiate things on the machine
+		self._send_cmd(b"cts config datafile "+self._stream)
+		self._send_cmd(b"cts init time 1.0")
+		self._send_cmd(b"cts init time %.4f"%self._runtime)
 
 
-			# Initiate data
-			self._data=[]
-			for i in range(self._copies_of_vectors):
-				self._data.append(np.zeros((self._channels,), dtype=np.float64))
+		# Initiate data
+		self._data=[]
+		for i in range(self._copies_of_vectors):
+			self._data.append(np.zeros((self._channels,), dtype=np.float64))
 
-			# We are now initialized
-			self._initialized=True
+		# We are now initialized
+		self._initialized=True
 
-		except :
-			self._dummy_rcts104=dummy_backend.dummy_spectrometer()
 	init=_pc104connect
 
 	def _pc104disconnect(self):

@@ -21,19 +21,17 @@ import sys
 
 #============================================================================================
 
-class dummy_chopper:
+class dummy_hardware:
 	
-	def __init__(self,device='/dev/chopper',offset=1000):
-		# Lock-check
-		self._initialized=False
-		self._device=device
-		self._offset=offset
-
-	def chopper_issue ():
+	def __init__(self,name):
 		time.sleep(1)
-		
-	def close (self):
-		assert self._initialized
-		print('Closing the dummy chopper')
-		self._initialized=False
-		
+		self._name=name
+
+	def init (self):
+		print("Issue in the", self._name, "initialization, switch on the dummy", self._name)
+
+	def issue (self,function=None):
+		if function == None:
+			print("The function you want to use is not available on the dummy", self._name)
+		else:
+			print("The '",function,"' function you want to use is not available on the dummy", self._name)

@@ -179,18 +179,22 @@ class measurements:
 			print("Init wobbler")
 			try: self.wob.init(wobbler_position)  # Must set start position
 			except: 
-				print  ("Issue in wobbler initialization, switch on the dummy wobbler")
-				dumm_wob=dummy_wobbler.dummy_wobbler.wobbler_issue()
+				self._dum_wob=dummy_chopper.dummy_hardware('wobbler')
+				self._dum_wob.init()
 
 			print("Init chopper")
 			try: self.chop.init()  # Can set nothing
 			except: 
-				print  ("Issue in chopper initialization, switch on the dummy chopper")
-				dum_chop=dummy_chopper.dummy_chopper.chopper_issue()
+				self._dum_chop=dummy_chopper.dummy_hardware('chopper')
+				self._dum_chop.init()
 
 			print("Init spectrometers")
-			for s in self.spec:
-				s.init()  # Can set nothing
+			try:
+				for s in self.spec:
+					s.init()  # Can set nothing
+			except:
+				self._dum_spec=dummy_chopper.dummy_hardware('spectrometer')
+				self._dum_spec.init()
 
 			print("Init LO")
 			try: self.lo.init()  # Does nothing but confirms connection
@@ -200,7 +204,10 @@ class measurements:
 			self.dbr.init()  # Does nothing but confirms connection
 
 			print("Init thermometer")
-			self.temperature.init()  # Does nothing but confirms connection
+			try: self.temperature.init()  # Does nothing but confirms connection
+			except:
+				self._dum_HK=dummy_chopper.dummy_hardware('housekeeping')
+				self._dum_HK.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -264,59 +271,76 @@ class measurements:
 			self._times=[]
 			self._housekeeping=[]
 			for i in range(4):
-				# print("setting pointing")
-				self.order[i]()
-
+				try:
+					# print("setting pointing")
+					self.order[i]()
+				except:
+					function=str(self.order[i])
+					self._dum_chop.issue(function)
+			
 				# print("adding time")
 				self._times.append(int(time.time()))
 
 				# This is where housekeeping data should go...
 #				print("generating housekeeping")
-
-				debug_msg='housekeeping'
 				
-				self._housekeeping.append(np.zeros((16)))
+				try:
+					debug_msg='housekeeping'
+					
+					self._housekeeping.append(np.zeros((16)))
 
-				debug_msg='HK_cryo'
-				self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
+					debug_msg='HK_cryo'
+					self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
 
-				debug_msg='HK_temps'
-				sensors=self.temperature.get_values()
-				self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
-				self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
-				self._housekeeping[-1][3]=sensors['Humidity']
+					debug_msg='HK_temps'
+					sensors=self.temperature.get_values()
+					self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
+					self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
+					self._housekeeping[-1][3]=sensors['Humidity']
 
-				debug_msg='HK_chopper_pos'
-#				self._housekeeping[-1][4]=ord(self.get_order()[i])
-				self._housekeeping[-1][4]=self.chop.get_pos()[0]
+					debug_msg='HK_chopper_pos'
+	#				self._housekeeping[-1][4]=ord(self.get_order()[i])
+					self._housekeeping[-1][4]=self.chop.get_pos()[0]
 
-				debug_msg='HK_dbr'
-				self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
-				self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
-				self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
-				self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
-				self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
-				self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
-				self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
-				self._housekeeping[-1][13]=float(self._ref)
-				self._housekeeping[-1][14]=float(self._freq)
-				self._housekeeping[-1][15]=float(self._if)
+					debug_msg='HK_dbr'
+					self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
+					self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
+					self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
+					self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
+					self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
+					self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
+					self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
+					self._housekeeping[-1][13]=float(self._ref)
+					self._housekeeping[-1][14]=float(self._freq)
+					self._housekeeping[-1][15]=float(self._if)
+				except:
+					self._dum_HK.issue()
 
-				debug_msg='wobbler_move'
-#				print("moving wobbler")
-				self.wob.move(self._wobbler_position[i])
+				try:
+					debug_msg='wobbler_move'
+	#				print("moving wobbler")
+					self.wob.move(self._wobbler_position[i])
+				except:
+					self._dum_wob.issue('move')
+				
+				try:
+					debug_msg='spec_run'
+#					print("telling to gather data")
+					for s in self.spec: s.run()
+				except: pass
+				
+				try:
+					debug_msg='get_data'
+#					print("downloading data")
+					for s in self.spec: s.get_data(i)
+				except: pass
 
-				debug_msg='spec_run'
-#				print("telling to gather data")
-				for s in self.spec: s.run()
-
-				debug_msg='get_data'
-#				print("downloading data")
-				for s in self.spec: s.get_data(i)
-
-				debug_msg='wobbler_wait'
-#				print("waiting for wobbler")
-				self.wob.wait()
+				try:
+					debug_msg='wobbler_wait'
+	#				print("waiting for wobbler")
+					self.wob.wait()
+				except: 
+					self._dum_wob.issue('wait')
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
