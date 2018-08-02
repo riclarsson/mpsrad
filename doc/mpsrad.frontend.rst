@@ -11,12 +11,3 @@ dbr module
 
    dbr
 
-dummy\_frontend module
-``````````````````````
-
-.. automodule:: mpsrad.frontend.dummy_frontend
-
-.. autosummary::
-   :toctree: generated
-
-   dummy_dbr

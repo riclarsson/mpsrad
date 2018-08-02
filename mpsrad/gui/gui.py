@@ -100,22 +100,25 @@ class MainWindow(QMainWindow):
 		self.init=False
 		self.running=False
 
-
-		self.dbr=dbr()
-		self.dbr.init()
-
+		try:
+			self.dbr=dbr()
+			self.dbr.init()
+		except:
+			self.dum_dbr=dummy_hardware('DBR')
+			self.dum_dbr.init()
+		
 		try:
 			self.sensors=sensors()
 			self.sensors.init()
 		except:
-			self.dum_HK=dummy_hardware('housekeeping')
+			self.dum_HK=dummy_hardware('HOUSEKEEPING')
 			self.dum_HK.init()
 
 		try:
 			self.chopper=chopper()
 			self.chopper.init()
 		except:
-			self.dum_chop=dummy_hardware('chopper')
+			self.dum_chop=dummy_hardware('CHOPPER')
 			self.dum_chop.init()
 
 		self.measureThread=measure(self)
@@ -181,8 +184,7 @@ class MainWindow(QMainWindow):
 		try:
 			self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
 		except:
-			self.dum_dbr=dummy_hardware('dbr')
-			self.dum_dbr.issue('get_status')
+			self.dum_dbr.run_issue('GET_STATUS',1.5)
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")

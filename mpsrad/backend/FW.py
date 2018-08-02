@@ -12,7 +12,7 @@ import socket
 import struct
 import numpy as np
 from time import sleep
-from . import dummy_backend
+
 
 class FW:
 	"""Connection to fast fourier transform spectrometer
@@ -71,44 +71,42 @@ class FW:
 		"""
 		assert not self._initialized,"Cannot init initialized FFTS"
 
-		try:
 
-			self._tcp_sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-			self._ip=socket.gethostbyname(self._host)
-			self._tcp_sock.connect((self._ip,self._tcp_port))
+		self._tcp_sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+		self._ip=socket.gethostbyname(self._host)
+		self._tcp_sock.connect((self._ip,self._tcp_port))
 
-			self._udp_sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-			self._udp_addr=(self._ip,self._udp_port)
-			self._udp_sock.sendto(b'AFFTS:cmdMode INTERNAL ',self._udp_addr)
-			sleep(0.1)
+		self._udp_sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+		self._udp_addr=(self._ip,self._udp_port)
+		self._udp_sock.sendto(b'AFFTS:cmdMode INTERNAL ',self._udp_addr)
+		sleep(0.1)
 
-			self._set_integration_time(self._integration_time)
+		self._set_integration_time(self._integration_time)
+		sleep(0.1)
+		self._set_blank_time(self._blank_time)
+		sleep(0.1)
+		s=''
+		for i in range(len(self._channels)):
+			s += '1 '
+			self._udp_sock.sendto(('AFFTS:Band'+str(i+1)+':cmdNumspecchan '
+				+ str(self._channels[i]) +
+				' ').encode("ascii"),self._udp_addr)
 			sleep(0.1)
-			self._set_blank_time(self._blank_time)
-			sleep(0.1)
-			s=''
-			for i in range(len(self._channels)):
-				s += '1 '
-				self._udp_sock.sendto(('AFFTS:Band'+str(i+1)+':cmdNumspecchan '
-					+ str(self._channels[i]) +
-					' ').encode("ascii"),self._udp_addr)
-				sleep(0.1)
-			self._udp_sock.sendto(('AFFTS:cmdUsedsections '+s).encode("ascii"),
-				self._udp_addr)
-			sleep(0.1)
-			self._udp_sock.sendto(b'AFFTS:configure ',self._udp_addr)
-			sleep(0.3)
-			self._udp_sock.sendto(b'AFFTS:calADC ',self._udp_addr)
-			self._initialized=True
-			self._sent=False
-			self._data=[]
+		self._udp_sock.sendto(('AFFTS:cmdUsedsections '+s).encode("ascii"),
+			self._udp_addr)
+		sleep(0.1)
+		self._udp_sock.sendto(b'AFFTS:configure ',self._udp_addr)
+		sleep(0.3)
+		self._udp_sock.sendto(b'AFFTS:calADC ',self._udp_addr)
+		self._initialized=True
+		self._sent=False
+		self._data=[]
 #			for i in range(self._copies_of_vectors):
 #				self._data.append(np.array([]))
-			for i in range(self._copies_of_vectors):
-				self._data.append(np.zeros((self._channels[0]), dtype=np.float64))
-			sleep(3.0)
-		except :
-			dummy_FW=dummy_backend.dummy_spectrometer()
+		for i in range(self._copies_of_vectors):
+			self._data.append(np.zeros((self._channels[0]), dtype=np.float64))
+		sleep(3.0)
+
 
 	def _set_integration_time(self,time):
 		t=str(time)+' '

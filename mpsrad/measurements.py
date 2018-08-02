@@ -178,13 +178,13 @@ class measurements:
 			print("Init wobbler")
 			try: self.wob.init(wobbler_position)  # Must set start position
 			except: 
-				self._dum_wob=dummy_hardware.dummy_hardware('wobbler')
+				self._dum_wob=dummy_hardware.dummy_hardware('WOBBLER')
 				self._dum_wob.init()
 
 			print("Init chopper")
 			try: self.chop.init()  # Can set nothing
 			except: 
-				self._dum_chop=dummy_hardware.dummy_hardware('chopper')
+				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
 				self._dum_chop.init()
 
 			print("Init spectrometers")
@@ -192,7 +192,7 @@ class measurements:
 				for s in self.spec:
 					s.init()  # Can set nothing
 			except:
-				self._dum_spec=dummy_hardware.dummy_hardware('spectrometer')
+				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
 				self._dum_spec.init()
 
 			print("Init LO")
@@ -200,12 +200,15 @@ class measurements:
 			except: pass
 
 			print("Init DBR")
-			self.dbr.init()  # Does nothing but confirms connection
+			try: self.dbr.init()  # Does nothing but confirms connection
+			except:
+				self._dum_dbr=dummy_hardware.dummy_hardware('DBR')
+				self._dum_dbr.init()
 
 			print("Init thermometer")
 			try: self.temperature.init()  # Does nothing but confirms connection
 			except:
-				self._dum_HK=dummy_hardware.dummy_hardware('housekeeping')
+				self._dum_HK=dummy_hardware.dummy_hardware('HOUSEKEEPING')
 				self._dum_HK.init()
 
 			print("All machines are initialized!")
@@ -226,13 +229,17 @@ class measurements:
 												/ 1000.0)
 				print("Wobbler motion pattern is: "+str(self._wobbler_position))
 			except:
-				print("Cannot set the wobbler motion patern, you're not connected to the wobbler")
+				print("ERROR IN SETTING THE MOTION PATTERN")
+				time.sleep(0.5)
+				print("NOT CONNECTED TO WOBBLER")
 			
 			try:
 				print("Set frequency")
 				self.set_frequency(self._freq)
 			except:
-				print("Cannot set the frequency, you're not connected to the dbr")
+				print("ERROR IN SETTING THE FREQUENCY")
+				time.sleep(0.5)
+				print("NOT CONNECTED TO DBR")
 			
 			print("Set filename")
 			self.set_filenames() 
@@ -275,7 +282,7 @@ class measurements:
 					self.order[i]()
 				except:
 					function=self.order[i].__name__
-					self._dum_chop.run_issue(function)
+					self._dum_chop.run_issue(function,3)
 			
 				# print("adding time")
 				self._times.append(int(time.time()))
@@ -313,33 +320,33 @@ class measurements:
 					self._housekeeping[-1][14]=float(self._freq)
 					self._housekeeping[-1][15]=float(self._if)
 				except:
-					self._dum_HK.run_issue()
+					self._dum_HK.run_issue(None,3)
 
 				try:
 					debug_msg='wobbler_move'
 #					print("moving wobbler")
 					self.wob.move(self._wobbler_position[i])
 				except:
-					self._dum_wob.run_issue('move')
+					self._dum_wob.run_issue('MOVE',3)
 				
 				try:
 					debug_msg='spec_run'
 #					print("telling to gather data")
 					for s in self.spec: s.run()
-				except: self._dum_spec.run_issue('run')
+				except: self._dum_spec.run_issue('RUN',3)
 				
 				try:
 					debug_msg='get_data'
 #					print("downloading data")
 					for s in self.spec: s.get_data(i)
-				except: self._dum_spec.run_issue('get_data')
+				except: self._dum_spec.run_issue('GET_DATA',3)
 
 				try:
 					debug_msg='wobbler_wait'
 #					print("waiting for wobbler")
 					self.wob.wait()
 				except: 
-					self._dum_wob.run_issue('wait')
+					self._dum_wob.run_issue('WAIT',3)
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
