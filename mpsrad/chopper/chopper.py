@@ -106,7 +106,4 @@ class chopper:
 		self._serial.close()
 		self._initialized=False
 
-	def issue (self):
-		self._initialized=True
-
 	close=_close_and_restore

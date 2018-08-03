@@ -11,12 +11,3 @@ wobbler module
 
    wobbler
 
-dummy\_wobbler module
-`````````````````````
-
-.. automodule:: mpsrad.wobbler.dummy_wobbler
-
-.. autosummary::
-   :toctree: generated
-
-   dummy_wobbler

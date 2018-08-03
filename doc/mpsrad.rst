@@ -25,3 +25,4 @@ Submodules
    mpsrad.version
    mpsrad.wiltron68169B
    mpsrad.measureThread
+   mpsrad.dummy_hardware

@@ -21,12 +21,3 @@ rcts104 module
 
    rcts104
 
-dummy\_backend module
-`````````````````````
-
-.. automodule:: mpsrad.backend.dummy_backend
-
-.. autosummary::
-   :toctree: generated
-
-   dummy_spectrometer

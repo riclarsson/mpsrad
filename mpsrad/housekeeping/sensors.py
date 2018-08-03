@@ -9,7 +9,6 @@ Last modification: 09.07.2018
 Get the temperature of various external sensors in order to store as housekeeping data
 """
 
-from . import dummy_housekeeping
 import serial
 from time import time,sleep
 from mpsrad.helper import serialCheck
