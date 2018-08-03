@@ -15,7 +15,7 @@ from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
-
+from . import dummy_hardware
 
 import time
 import datetime
@@ -23,6 +23,7 @@ import numpy as np
 
 
 class measurements:
+	"""Run the measurements once all devices are initialized"""
 	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
 		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
 		freq_range=(214, 270),
@@ -40,6 +41,62 @@ class measurements:
 		spectrometer_hosts=['sofia4'], spectrometer_tcp_ports=[1788],
 		spectrometer_udp_ports=[None]):
 
+		""" Initialize the machine
+
+		Parameters:
+			sweep (boolean):
+				**INFO**
+			freq (int):
+				Set the frequency of the device
+			freq_step (float):
+				Set the frequency step 
+			if_offset (int):
+				**INFO**
+			full_file (int):
+				Must be a multiple of 4
+			repeat (boolean):
+				**INFO**
+			wait (int):
+				**INFO**
+			freq_range (tuple):
+				Range of frequencies available
+			wobbler_device (str):
+				wobbler device's path
+			wobbler_address (str):
+				wobbler's address
+			wiltron68169B_address (int):
+				wiltron68169B's address
+			chopper_device (str):
+				chopper device's path
+			antenna_offset (int):
+				**INFO**
+			dbr_port (int):
+				Port to connect with the dbr
+			dbr_server (str):
+				Name of the dbr's server
+			integration_time (int):
+				**INFO**
+			blank_time (int):
+				**INFO**
+			mode (str):
+				**INFO**
+			basename (str):
+				**INFO**
+			raw_formats (list):
+				list of format for the files
+			formatnames (list):
+				list of format name for files
+			spectrometer_channels (list):
+				list of channels for the spectrometer
+			spectrometers (list):
+				list of spectrometer
+			spectrometer_hosts (list):
+				list of host names
+			spectrometer_tcp_ports (list):
+				list of tcp port
+			spectrometer_udp_ports (list):
+				list of udp ports
+		"""
 		assert not (full_file % 4), "Must have full series in file"
 		assert wait >= 0.0, "Cannot have negative waiting time"
 
@@ -111,27 +168,45 @@ class measurements:
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
+
+		Parameters:
+			wobbler_position (int):
+				Initial version of the wobbler
 		"""
 		assert not self._initialized, "Cannot reinitialize measurement series"
 		try:
 			print("Init wobbler")
-			self.wob.init(wobbler_position)  # Must set start position
+			try: self.wob.init(wobbler_position)  # Must set start position
+			except: 
+				self._dum_wob=dummy_hardware.dummy_hardware('wobbler')
+				self._dum_wob.init()
 
 			print("Init chopper")
-			self.chop.init()  # Can set nothing
+			try: self.chop.init()  # Can set nothing
+			except: 
+				self._dum_chop=dummy_hardware.dummy_hardware('chopper')
+				self._dum_chop.init()
 
 			print("Init spectrometers")
-			for s in self.spec:
-				s.init()  # Can set nothing
+			try:
+				for s in self.spec:
+					s.init()  # Can set nothing
+			except:
+				self._dum_spec=dummy_hardware.dummy_hardware('spectrometer')
+				self._dum_spec.init()
 
 			print("Init LO")
-			self.lo.init()  # Does nothing but confirms connection
+			try: self.lo.init()  # Does nothing but confirms connection
+			except: pass
 
 			print("Init DBR")
 			self.dbr.init()  # Does nothing but confirms connection
 
 			print("Init thermometer")
-			self.temperature.init()  # Does nothing but confirms connection
+			try: self.temperature.init()  # Does nothing but confirms connection
+			except:
+				self._dum_HK=dummy_hardware.dummy_hardware('housekeeping')
+				self._dum_HK.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -145,16 +220,22 @@ class measurements:
 
 		try:
 			print("Setting wobbler motion pattern...")
-			self._wobbler_position=\
+			try:
+				self._wobbler_position=\
 				self.wob.get_recommended_movements(int(self._integration_time)
 												/ 1000.0)
-			print("Wobbler motion pattern is: "+str(self._wobbler_position))
-
-			print("Set frequency")
-			self.set_frequency(self._freq)
-
+				print("Wobbler motion pattern is: "+str(self._wobbler_position))
+			except:
+				print("Cannot set the wobbler motion patern, you're not connected to the wobbler")
+			
+			try:
+				print("Set frequency")
+				self.set_frequency(self._freq)
+			except:
+				print("Cannot set the frequency, you're not connected to the dbr")
+			
 			print("Set filename")
-			self.set_filenames()
+			self.set_filenames() 
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -167,81 +248,98 @@ class measurements:
 		"""Run the measurements and append data.  If any failure, close all
 
 		Sets housekeeping to 16 numbers as:
-		0: Cold-load temperature
-		1: 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
-		2: 0,  # COULD BE SET TO 2M AIR TEMPERATURE
-		3: 0,  # COULD BE SET TO 2M AIR RH
-		4: 0,  # COULD BE SET TO GROUND MAGNETOMETER
-		5: Integration time in miliseconds
-		6: B2 temperature
-		7: B3 temperature
-		8: 77K-plate temperature
-		9: 15K-plate temperature
-		10: 4K-plate temperature
-		11: B2 requested LO
-		12: B3 requested LO
-		13: Reference LO
-		14: Requested frequency
-		15: Requested intermediate frequency
+		   - 0 : Cold-load temperature
+		   - 1 : 0,  # SHOULD BE SET TO HOT-LOAD TEMPERATURE
+		   - 2 : 0,  # COULD BE SET TO 2M AIR TEMPERATURE
+		   - 3 : 0,  # COULD BE SET TO 2M AIR RH
+		   - 4 : 0,  # COULD BE SET TO GROUND MAGNETOMETER
+		   - 5 : Integration time in miliseconds
+		   - 6 : B2 temperature
+		   - 7 : B3 temperature
+		   - 8 : 77K-plate temperature
+		   - 9 : 15K-plate temperature
+		   - 10 : 4K-plate temperature
+		   - 11 : B2 requested LO
+		   - 12 : B3 requested LO
+		   - 13 : Reference LO
+		   - 14 : Requested frequency
+		   - 15 : Requested intermediate frequency
 		"""
 		assert self._initialized, "Cannot run uninitialized measurement series"
 		try:
 			self._times=[]
 			self._housekeeping=[]
 			for i in range(4):
-				# print("setting pointing")
-				self.order[i]()
-
+				try:
+					# print("setting pointing")
+					self.order[i]()
+				except:
+					function=self.order[i].__name__
+					self._dum_chop.run_issue(function)
+			
 				# print("adding time")
 				self._times.append(int(time.time()))
 
 				# This is where housekeeping data should go...
 #				print("generating housekeeping")
-
-				debug_msg='housekeeping'
 				
-				self._housekeeping.append(np.zeros((16)))
+				try:
+					debug_msg='housekeeping'
+					
+					self._housekeeping.append(np.zeros((16)))
 
-				debug_msg='HK_cryo'
-				self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
+					debug_msg='HK_cryo'
+					self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
 
-				debug_msg='HK_temps'
-				sensors=self.temperature.get_values()
-				self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
-				self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
-				self._housekeeping[-1][3]=sensors['Humidity']
+					debug_msg='HK_temps'
+					sensors=self.temperature.get_values()
+					self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
+					self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
+					self._housekeeping[-1][3]=sensors['Humidity']
 
-				debug_msg='HK_chopper_pos'
-#				self._housekeeping[-1][4]=ord(self.get_order()[i])
-				self._housekeeping[-1][4]=self.chop.get_pos()[0]
+					debug_msg='HK_chopper_pos'
+	#				self._housekeeping[-1][4]=ord(self.get_order()[i])
+					self._housekeeping[-1][4]=self.chop.get_pos()[0]
 
-				debug_msg='HK_dbr'
-				self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
-				self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
-				self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
-				self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
-				self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
-				self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
-				self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
-				self._housekeeping[-1][13]=float(self._ref)
-				self._housekeeping[-1][14]=float(self._freq)
-				self._housekeeping[-1][15]=float(self._if)
+					debug_msg='HK_dbr'
+					self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
+					self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
+					self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
+					self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
+					self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
+					self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
+					self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
+					self._housekeeping[-1][13]=float(self._ref)
+					self._housekeeping[-1][14]=float(self._freq)
+					self._housekeeping[-1][15]=float(self._if)
+				except:
+					self._dum_HK.run_issue()
 
-				debug_msg='wobbler_move'
-#				print("moving wobbler")
-				self.wob.move(self._wobbler_position[i])
+				try:
+					debug_msg='wobbler_move'
+#					print("moving wobbler")
+					self.wob.move(self._wobbler_position[i])
+				except:
+					self._dum_wob.run_issue('move')
+				
+				try:
+					debug_msg='spec_run'
+#					print("telling to gather data")
+					for s in self.spec: s.run()
+				except: self._dum_spec.run_issue('run')
+				
+				try:
+					debug_msg='get_data'
+#					print("downloading data")
+					for s in self.spec: s.get_data(i)
+				except: self._dum_spec.run_issue('get_data')
 
-				debug_msg='spec_run'
-#				print("telling to gather data")
-				for s in self.spec: s.run()
-
-				debug_msg='get_data'
-#				print("downloading data")
-				for s in self.spec: s.get_data(i)
-
-				debug_msg='wobbler_wait'
-#				print("waiting for wobbler")
-				self.wob.wait()
+				try:
+					debug_msg='wobbler_wait'
+#					print("waiting for wobbler")
+					self.wob.wait()
+				except: 
+					self._dum_wob.run_issue('wait')
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -252,21 +350,30 @@ class measurements:
 			raise RuntimeError("Unexpected runtime error in run")
 
 	def get_order(self):
+		"""
+		Return:
+			**INFO**
+		"""
 		return [l.__name__.replace('set_','')[0].upper() for l in self.order]
 
 
 	def save(self):
 		"""Save the CAHA series to the provided files
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot save uninitialized measurement "
 								"series")
 		try:
 			for i in range(4):
 				# Need to take into account multiple spectrometers sometime...
-				print('saving spectra '+str(self._i*4+i))
-				for j in range(self._spectrometers_count):
-					self.raw[j].append_to_file(self._files[j], self._times[i],
-						self._housekeeping[i],self.spec[j]._data[i][2:-2])
+				try:
+					print('saving spectra '+str(self._i*4+i))
+					for j in range(self._spectrometers_count):
+						self.raw[j].append_to_file(self._files[j], self._times[i],
+							self._housekeeping[i],self.spec[j]._data[i][2:-2])
+				except: self._dum_spec.save_issue()
+					
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -277,6 +384,8 @@ class measurements:
 
 	def update(self):
 		"""Keep track of counts to either change frequency or filename
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update uninitialized measurement "
 			"series")
@@ -296,6 +405,8 @@ class measurements:
 
 	def update_freq(self):
 		"""Update the frequency to the next choosen level.
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update frequency of uninitialized "
 			"measurement series")
@@ -318,6 +429,8 @@ class measurements:
 
 	def set_filenames(self):
 		"""Set the names of the files to write to
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set filename of uninitialized "
 			"measurement series")
@@ -339,6 +452,12 @@ class measurements:
 
 	def set_frequency(self, freq):
 		"""Set the frequency of the measurement.  Keeps track of IF
+
+		Parameters: 
+			freq (float):
+				Frequency of the measurement
+		
+		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set frequenct of uninitialized "
 			"measurement series")

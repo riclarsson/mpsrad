@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
-# Measurements as separate thread
-# Author: Borys Dabrowski, dabrowski@mps.mpg.de
-# Last modification: 29.06.2018
+
+"""
+Author: Borys Dabrowski
+
+Last modification: 29.06.2018
+"""
 # =============================================================================
 from threading import Thread
 from time import localtime,sleep,time
 
 class measure(Thread):
+	"""Measurements as separate thread
+
+	.. note:: For more information about the Thread’s methods and attributes used here, please refer to the `threading.Thread class documentation <https://docs.python.org/3/library/threading.html>`_
+	"""
 	def __init__(self,parent):
 		Thread.__init__(self)
 		self.parent=parent
@@ -17,15 +24,31 @@ class measure(Thread):
 		self.start()
 
 	def close(self):
+		"""Close the flag"""
 		self.close_flag=True
 
 	def do(self,cmd):
+		"""Execute the command
+
+		Parameters 
+			cmd (str):
+				Command to be runned
+		"""
 		self.cmd=cmd
 
 	def busy(self):
+		"""Check if a command is aleady active
+
+		Return:
+			Boolean whether or not a command is active
+		"""
 		return self.cmd is not None
 
 	def run(self):
+		"""Run the measure according to the command.
+
+		The command could be : init / run / stop / close / test / periodic
+		"""
 		while not self.close_flag:
 			sleep(.01)
 			# init measurements

@@ -15,16 +15,6 @@ from . import dummy_backend
 
 class rcts104:
 	""" Interactions with CTS functionality
-
-	Functions:
-		init:
-			Initialize the machine by locking onto it
-		close:
-			Remove the lock of the machine
-		run:
-			Runs the machine and fills requested channel
-		save_data:
-			Saves data to file
 	"""
 	def __init__(self,
 			name="rcts104",
@@ -36,7 +26,25 @@ class rcts104:
 			integration_time=1000,
 			blank_time=None,
 			data_storage_containers=4):
-
+		"""
+		Parameters:
+			name (any):
+				Name of the mahcine (unused, kept as housekeeping)
+			host (str):
+				Name of the host, IP or DNS
+			tcp_port (str):
+				First port to communicate with the FW spectrometer
+			udp_port (str):
+				Second port to communicate with the FW spectrometer
+			channels (array of int):
+				Numbers of channel to **info**
+			integration_time (int):
+				**info**
+			blank_time (int):
+				**info**
+			data_storage_containers (int):
+				**info**
+		"""
 		self.name=name
 		self.frequency=frequency
 
@@ -57,6 +65,10 @@ class rcts104:
 
 
 	def _pc104connect(self):
+		"""Initialize the machine by locking onto it
+
+		Musn't be initialized already.
+		"""
 		assert not self._initialized, "Cannot init an initialized CTS"
 
 		# Socket
@@ -67,6 +79,7 @@ class rcts104:
 		greetings=self._socket.recv(1024)
 		assert len(greetings)>0,\
 			"Failed to connect to "+self._host+":"+str(self._tcp_port)
+
 		parse=greetings.replace(b'\n',b'').split(b'connected to ')[1].split(b' on ')
 		assert len(parse)==2, "Failed to read the greetings"
 
@@ -88,9 +101,12 @@ class rcts104:
 
 		# We are now initialized
 		self._initialized=True
+
 	init=_pc104connect
 
 	def _pc104disconnect(self):
+		"""Remove the lock of the machine
+		"""
 		assert self._initialized, "Cannot close an uninitialized CTS"
 		self._socket.close()
 		del self._data
@@ -99,6 +115,8 @@ class rcts104:
 
 
 	def send_cmd(self,command):
+		"""Must be initialized already.
+		"""
 		assert self._initialized, "Must first initialize the CTS"
 		return self._send_cmd(command)
 
@@ -110,6 +128,9 @@ class rcts104:
 
 	def run(self):
 		"""Runs the CTS
+
+		Must be initialized already
+
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"
@@ -121,6 +142,9 @@ class rcts104:
 
 	def get_data(self, i=0):
 		"""Runs the CTS
+
+		Must be initialized already
+		
 		Use the index to access different data (e.g., cold/hot/ant/ref/calib)
 		"""
 		assert self._initialized, "Must first initialize the CTS"
@@ -155,7 +179,8 @@ class rcts104:
 
 	def save_data(self, basename="/home/dabrowski/data/test/CTS", file=None,
 			binary=True):
-		"""Saves data to file at basename+file
+		"""Saves data to file at basename+file.
+
 		If file is None, the current time is used to create the filename
 		Saves with numpy binary format if binary is true or as ascii otherwise
 		"""

@@ -11,11 +11,17 @@ Controls the Chopper
 import serial
 
 from time import time,sleep
-from . import dummy_chopper
 from mpsrad.helper import serialCheck
 
 class chopper:
 	def __init__(self,device='/dev/chopper',offset=1000):
+		"""
+		Parameters:
+			device (str):
+				chopper device's path
+			offset (int):
+				**info**
+		"""
 		# Lock-check
 		self._initialized=False
 		self._device=device
@@ -55,7 +61,10 @@ class chopper:
 		return self.set_pos(pos)
 
 	def set_pos(self,new_pos):
-		"""Sets the device pointing towards selected direction"""
+		"""Sets the device pointing towards selected direction
+
+		Must be initialized already.
+		"""
 		if isinstance(new_pos,str): new_pos=new_pos.encode()
 		assert self._initialized, "Must first initialize the chopper"
 		old_pos=self.get_pos()
@@ -78,22 +87,26 @@ class chopper:
 		return self._ask('?')
 
 	def init(self):
-		try:
-			assert not self._initialized, "Cannot init initialized chopper"
-			checkserial=serialCheck.serialcheck()	#make sure to use pyserial
-			self._serial=serial.Serial(self._device,115200,timeout=2)
+		"""Connection with the chopper and set the device access
 
-			# get greetings
-			greetings=self._ask('G')
-			self._initialized=True
-			return greetings
-		except:
-			dummy_chop=dummy_chopper.dummy_chopper()
+		Musn't be initialized already.
+		"""
+		assert not self._initialized, "Cannot init initialized chopper"
+		checkserial=serialCheck.serialcheck()	#make sure to use pyserial
+		self._serial=serial.Serial(self._device,115200,timeout=2)
 
+		# get greetings
+		greetings=self._ask('G')
+		self._initialized=True
+		return greetings
+		
 	def _close_and_restore(self):
 		""" Close the device access"""
 		assert self._initialized, "Cannot close uninitialized chopper"
 		self._serial.close()
 		self._initialized=False
+
+	def issue (self):
+		self._initialized=True
 
 	close=_close_and_restore

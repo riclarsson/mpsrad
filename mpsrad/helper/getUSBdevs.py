@@ -10,6 +10,7 @@ from time import time,sleep
 import serial
 
 def getUSBdevs():
+	"""Get the list of the devices available"""
 	paths=['/dev/'+n for n in listdir('/dev/') if 'ttyUSB' in n]
 
 	out={}
@@ -31,6 +32,7 @@ def getUSBdevs():
 	return out
 
 def displayUSBdevs():
+	"""Print a list of the devices available"""
 	print('Identification in progress...')
 	print(getUSBdevs())
 	print('Done!')

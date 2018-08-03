@@ -2,12 +2,18 @@
 
 
 def get_version_info():
+    """Provide the package version"""
     VERSION = '0.0.1'
 
     return VERSION
 
 
 def get_svn_revision():
+    """**INFO**
+
+    Return:
+        **INFO**
+    """
     def _minimal_ext_cmd(cmd):
         from subprocess import Popen, PIPE
         from os import environ

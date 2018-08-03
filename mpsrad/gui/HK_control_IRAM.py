@@ -22,7 +22,7 @@ import os
 class HKwidget(DataSetShowGroupBox):
 	"""Create the different widget useful for the housekeeping values
 
-	For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
+	.. note:: For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
 	"""
 	class HKset(DataSet):
 		_bd=BeginGroup("DACs").set_pos(col=0)
@@ -122,7 +122,8 @@ class HKwidget(DataSetShowGroupBox):
 
 # Control widget ==============================================================
 class Controlwidget(DataSetEditGroupBox):
-	"""For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
+	"""
+	.. note:: For more information about the guidata.dataset.qtwidgets module used here, please refer to its `documentation <https://pythonhosted.org/guidata/_modules/guidata/dataset/qtwidgets.html>`_
 	"""
 	class Controlset(DataSet):
 		Directory=DirectoryItem("Directory",default=os.path.abspath("../../../data/"))

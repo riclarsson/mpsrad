@@ -4,6 +4,8 @@ Graphical User Interface package
 GUI interface
 `````````````
 
+Here are the different functions to call all the GUI modules
+
 .. automodule:: mpsrad.gui
 
    .. autofunction:: start
@@ -11,8 +13,7 @@ GUI interface
 GUI module
 ``````````
 
-GUI interface
-`````````````
+.. automodule :: mpsrad.gui.gui
 
    .. autoclass:: CentralWidget
 
@@ -33,6 +34,8 @@ Housekeekping control IRAM module
 
 Bars module
 ```````````
+
+.. automodule:: mpsrad.gui.myBars
 
    .. autoclass:: StatusBar
 

@@ -21,3 +21,4 @@ if not __MPS_SETUP__:
     from . import housekeeping
     from . import gui
     from . import helper
+    from . import dummy_hardware
