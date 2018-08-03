@@ -27,6 +27,7 @@ class FW:
 	def __init__(self,
 			library=None,
 			name='AFFTS',
+			frequency=[0,1500],
 			host='localhost',
 			tcp_port=25144,
 			udp_port=16210,

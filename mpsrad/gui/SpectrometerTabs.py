@@ -2,7 +2,7 @@
 """
 Spectrometers plots widget
 
-Last modification: 03.07.2018
+Last modification: 24.07.2018
 
 Author: Borys Dabrowski
 """
@@ -193,7 +193,7 @@ class SpectrometerPanel(QSplitter):
 
 	For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
 	"""
-	def __init__(self,parent,spec=None,axisLimits=[0,40,0,400],
+	def __init__(self,parent,spec=None,
 		plots=[
 				[
 					{'name':'Raw spectra','curves':['Cold','Hot','Antenna']},
@@ -214,7 +214,9 @@ class SpectrometerPanel(QSplitter):
 		self.chopper_pos=None
 
 		self.active=None
-		self.axisLimits=axisLimits
+		
+		xlim=[0,40] if spec is None else spec.frequency
+		self.axisLimits=xlim+[0,400]
 
 		self.xylim=XYlim()
 
@@ -328,11 +330,11 @@ class SpectrometerTabs(QTabWidget):
 		self.spec=spec
 		self.setTabs(self.spec)
 
-	def setTabs(self,spec=[],axisLimits=[0,40,0,400]):
+	def setTabs(self,spec=[]):
 		self.removeTabs()
 		self.spec=spec
-		self.sp=[SpectrometerPanel(self,spec=n,axisLimits=axisLimits)\
-		    for n in self.spec] if self.spec else [SpectrometerPanel(self)]
+		self.sp=[SpectrometerPanel(self,spec=n) for n in self.spec]\
+			if self.spec else [SpectrometerPanel(self)]
 
 		for sp in self.sp:
 			vBoxlayout=QVBoxLayout()

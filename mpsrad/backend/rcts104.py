@@ -2,14 +2,14 @@
 """
 Created: 09.07.2018
 
-Last modification: 23.05.2018
+Last modification: 26.07.2018
 
 Author: Borys Dabrowski
 
 Interactions with CTS functionality
 """
 
-import datetime,socket,re,time
+import datetime,socket,time
 import numpy as np
 from . import dummy_backend
 
@@ -28,6 +28,7 @@ class rcts104:
 	"""
 	def __init__(self,
 			name="rcts104",
+			frequency=[2100-210/2,2100+210/2],
 			host="sofia4",
 			tcp_port=1788,
 			udp_port=None,
@@ -37,6 +38,7 @@ class rcts104:
 			data_storage_containers=4):
 
 		self.name=name
+		self.frequency=frequency
 
 		# Lock-check
 		self._initialized=False
@@ -61,33 +63,31 @@ class rcts104:
 		self._socket=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 		# Connect to the machine
-		try :
-			self._socket.connect((self._host,self._tcp_port))
-			greetings=self._socket.recv(1024)
-			assert len(greetings)>0,\
-				"Failed to connect to "+self._host+":"+str(self._tcp_port)
+		self._socket.connect((self._host,self._tcp_port))
+		greetings=self._socket.recv(1024)
+		assert len(greetings)>0,\
+			"Failed to connect to "+self._host+":"+str(self._tcp_port)
+		parse=greetings.replace(b'\n',b'').split(b'connected to ')[1].split(b' on ')
+		assert len(parse)==2, "Failed to read the greetings"
 
-			parse=re.search(b"connected to (.+?) on (.+$)",greetings)
-			assert len(parse.groups())==2, "Failed to read the greetings"
+		self._hostname,self._stream=parse[0],parse[1]
 
-			self._hostname,self._stream=parse.group(1),parse.group(2)
+		# Initiate things on the machine
+		reply=self._send_cmd(b"cts config datafile "+self._stream)
+		self._channels=int(reply.split(b'channels ')[1].split(b' cycles')[0],0)
+		assert self._channels in [7504,4096], "Wrong number of channels: %d"%self._channels
 
-			# Initiate things on the machine
-			self._send_cmd(b"cts config datafile "+self._stream)
-			self._send_cmd(b"cts init time 1.0")
-			self._send_cmd(b"cts init time %.4f"%self._runtime)
+		if self._channels==7504: self._send_cmd(b"cts init time 1.0")
+		else: self._send_cmd(b"cts config time %.4f"%self._runtime)
+		self._send_cmd(b"cts init time %.4f"%self._runtime)
 
+		# Initiate data
+		self._data=[]
+		for i in range(self._copies_of_vectors):
+			self._data.append(np.zeros((self._channels,), dtype=np.float64))
 
-			# Initiate data
-			self._data=[]
-			for i in range(self._copies_of_vectors):
-				self._data.append(np.zeros((self._channels,), dtype=np.float64))
-
-			# We are now initialized
-			self._initialized=True
-
-		except :
-			self._dummy_rcts104=dummy_backend.dummy_spectrometer()
+		# We are now initialized
+		self._initialized=True
 	init=_pc104connect
 
 	def _pc104disconnect(self):
@@ -103,11 +103,9 @@ class rcts104:
 		return self._send_cmd(command)
 
 	def _send_cmd(self,command):
-#		print(command)
 		self._socket.setblocking(1)	# make socket blocking
 		self._socket.sendall(command+b"\n")
 		reply=self._socket.recv(1024)
-#		print(reply)
 		return reply
 
 	def run(self):
@@ -133,21 +131,27 @@ class rcts104:
 		begin=time.time()
 
 		reply=b""
-		while reply.find(b"delay ")==-1 and time.time()-begin<self._runtime*2:
+		if self._channels==7504: end_cond=b"bufa "
+		else: end_cond=b"swaplist {}}"
+
+		while reply.find(end_cond)==-1 and reply[-1:]!=b'\n' and\
+				time.time()-begin<self._runtime*2:
 			time.sleep(0.1)
 			try: reply+=self._socket.recv(65536)
 			except: pass
 
 		assert len(reply)>0, "Failed to attain data from the machine"
-
 		self._reply=reply	# test line
 
-		x=map(int,reply.split(b'{')[1].split(b'}')[0].split(b' '))
+		if self._channels==7504: 
+			x=map(int,reply.split(b'{')[1].split(b'}')[0].split(b' '))
+		else:
+			x=map(int,reply.split(b'} \n')[1].split(b'\nread')[0].split(b'\n'))
+
 		cycles=float(reply.split(b'cycles ')[1].split(b' ')[0])
 		self._data[int(i)]=np.array([n/cycles for n in x])
 
 		self._sent=False
-
 
 	def save_data(self, basename="/home/dabrowski/data/test/CTS", file=None,
 			binary=True):

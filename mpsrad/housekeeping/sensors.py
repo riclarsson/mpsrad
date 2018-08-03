@@ -51,6 +51,7 @@ class sensors:
 			self._initialized=True
 			return greetings
 		except :
+			print('Dummy sensors...')
 			self._dummy_sensors=dummy_housekeeping.dummy_sensors()
 
 	def get_values(self):

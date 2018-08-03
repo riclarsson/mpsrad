@@ -3,7 +3,7 @@
 """
 IRAM GUI
 
-Last modification: 19.07.2018
+Last modification: 26.07.2018
 
 Author: Borys Dabrowski
 """
@@ -14,10 +14,6 @@ from guidata.qt.QtGui import QMainWindow,QSplitter
 from guidata.qt.QtCore import Qt,QSize,QTimer
 
 from time import localtime
-
-from mpsrad.frontend.dbr import dbr
-from mpsrad.housekeeping.sensors import sensors
-from mpsrad.chopper.chopper import chopper
 
 from mpsrad.gui.myIcons import myIcons
 from mpsrad.gui.SpectrometerTabs import SpectrometerTabs
@@ -50,7 +46,7 @@ class CentralWidget(QSplitter):
 		# Control panel (housekeeping + control)
 		controlpanel=QSplitter()
 		self.Controlvalues=Controlwidget()
-		self.HKvalues=HKwidget()
+		self.HKvalues=HKwidget(controlValues=self.Controlvalues)
 		controlpanel.addWidget(self.Controlvalues)
 		controlpanel.addWidget(self.HKvalues)
 		controlpanel.setSizes([2000,1])
@@ -98,13 +94,6 @@ class MainWindow(QMainWindow):
 		self.init=False
 		self.running=False
 
-		self.dbr=dbr()
-		self.dbr.init()
-		self.sensors=sensors()
-		self.sensors.init()
-		self.chopper=chopper()
-		self.chopper.init()
-
 		self.measureThread=measure(self)
 
 		self.timer=QTimer()
@@ -119,6 +108,7 @@ class MainWindow(QMainWindow):
 		self.sBar.close()
 		self.timer.stop()
 		self.measureThread.close()
+		self.HKvalues.close()
 
 	# configure measurement object
 	def setMeasurement(self):
@@ -134,10 +124,12 @@ class MainWindow(QMainWindow):
 			sweep=c.Sweep,
 			full_file=c.NSpec,
 			freq=c.Frequency,
-			integration_time=int(c.IntegrationTime*1000),
+			integration_time=int(c.IntegrationTime*1000.),
 			blank_time=c.BlankTime,
 			antenna_offset=c.Antenna
 			)
+
+		self.HKvalues.measurements=self.measurements
 
 	# init/deinit measurement
 	def measureInitToggle(self):
@@ -165,7 +157,7 @@ class MainWindow(QMainWindow):
 		self.timer.stop()
 		self.time=localtime()
 
-		self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
+		self.HKvalues.updateHK()
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")
@@ -174,7 +166,7 @@ class MainWindow(QMainWindow):
 			spec,tabs=self.measurements.spec,self.centralwidget.tabs
 			if tabs.spec!=spec:
 				tabs.removeTabs()
-				tabs.setTabs(spec,axisLimits=[0,2100,0,400])
+				tabs.setTabs(spec)
 
 		if self.running:
 			self.sBar.setInfo("Running","preview")
@@ -196,7 +188,7 @@ class MainWindow(QMainWindow):
 
 # Show GUI ==============================================================
 from guidata import qapplication
-
+#
 window=''
 
 def begin():
@@ -205,7 +197,15 @@ def begin():
 	window=MainWindow()
 	print('ok')
 	return(app,window)
+#
+## =============================================================================
+#if __name__=='__main__':
+#	start()
 
-# =============================================================================
 if __name__=='__main__':
-	start()
+	# Show GUI ==============================================================
+#	from guidata import qapplication
+	app=qapplication()
+	window=MainWindow()
+	window.show()
+	app.exec_()

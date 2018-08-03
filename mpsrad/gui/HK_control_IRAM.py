@@ -2,11 +2,14 @@
 """
 Housekeeping and control widgets for IRAM radiometer
 
-Last modification: 19.07.2018
+Last modification: 30.07.2018
 
 Author: Borys Dabrowski
 """
 # =============================================================================
+from mpsrad.housekeeping.sensors import sensors
+from mpsrad.chopper.chopper import chopper
+from mpsrad.frontend.dbr import dbr
 
 from guidata.dataset.datatypes import DataSet,BeginGroup,EndGroup
 from guidata.dataset.dataitems import FloatItem,IntItem,ChoiceItem,DirectoryItem
@@ -14,8 +17,6 @@ from guidata.dataset.qtwidgets import DataSetShowGroupBox,DataSetEditGroupBox
 from guiqwt.config import _
 
 import os
-
-from mpsrad.frontend.dbr import dbr
 
 # Housekeeping widget =========================================================
 class HKwidget(DataSetShowGroupBox):
@@ -53,14 +54,28 @@ class HKwidget(DataSetShowGroupBox):
 		Humidity=FloatItem("Humidity",default=1.,unit="%").set_prop("display",format="%4.2f")
 		_ee=EndGroup("Environment")
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self,controlValues=None,*args,**kwargs):
 		DataSetShowGroupBox.__init__(self,_("Housekeeping"),self.HKset)
 
-	def updateHK(self,status,controlValues):
-#		status=self.dbr.get_status()
-#		c=self.Controlvalues
-		c=controlValues
-		band=[2,3][c.dataset.Frequency>dbr.band2limits[1]]
+		self.controlValues=controlValues
+		self.measurements=None
+
+		self.dbr=dbr()
+		self.sensors=sensors()
+		self.chopper=chopper()
+		self.dbr.init()
+		self.sensors.init()
+		self.chopper.init()
+
+	def close(self):
+		self.sensors.close()
+		self.chopper.close()
+		self.dbr.close()
+
+	def updateHK(self):
+		status=self.dbr.get_status()
+		c=self.controlValues
+		band=[2,3][c.dataset.Frequency>self.dbr.band2limits[1]]
 		c.setTitle("Control panel, Band %i"%band)
 
 		val=lambda name: [n['value'] for n in status if n['name']==name][0]
@@ -78,18 +93,31 @@ class HKwidget(DataSetShowGroupBox):
 		self.dataset.OffsetVolt=val('B%i.adc_OFFSET_VOLT.act.val'%band)
 		self.dataset.PLLIFLevel=val('B%i.adc_PLL_IF_LEVEL.act.val'%band)
 		self.dataset.HmxCurrent=val('B%i.adc_HMX_CURRENT.act.val'%band)
-		
-		try:
-			hkvals=self.measurements._housekeeping[-1]
-			if hkvals[1]!=0: self.dataset.RoomTemp=hkvals[1]	# room temperature K
-			if hkvals[2]!=0: self.dataset.OutsideTemp=hkvals[2]	# outside temperature K
-			if hkvals[3]!=0: self.dataset.Humidity=hkvals[3]	# humidity %
 
-			if hkvals[4]!=0: c.dataset.Chopper=chr(int(hkvals[4]))
-		except: pass
+		try: hkvals=self.measurements._housekeeping[-1]
+		except: hkvals=[0]
 
-		c.set()
+		if any(hkvals[1:4]):
+			RoomTemp=hkvals[1]			# room temperature K
+			OutsideTemp=hkvals[2]		# outside temperature K
+			Humidity=hkvals[3]			# humidity %
+
+			self.dataset.RoomTemp=RoomTemp
+			self.dataset.OutsideTemp=OutsideTemp
+			self.dataset.Humidity=Humidity
+
+			Chopper=chr(int(hkvals[4]))	# chopper position
+			c.dataset.Chopper=Chopper
+
+#		else:
+#			sensors=self.sensors.get_values()
+#			RoomTemp=self.sensors.C2K(sensors['Temp0'])
+#			OutsideTemp=self.sensors.C2K(sensors['Temp1'])
+#			Humidity=sensors['Humidity']
+#			Chopper=self.chopper.get_pos()[:1]
+#			RoomTemp=OutsideTemp=Humidity=Chopper=0
 		self.get()
+		c.set()
 # =============================================================================
 
 # Control widget ==============================================================
