@@ -11,7 +11,6 @@ Interactions with CTS functionality
 
 import datetime,socket,time
 import numpy as np
-from . import dummy_backend
 
 class rcts104:
 	""" Interactions with CTS functionality

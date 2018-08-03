@@ -16,7 +16,6 @@ try:
 except:
 	from xmlrpclib import ServerProxy
 
-from . import dummy_frontend
 
 class dbr:
 	"""Quick and dirty connection to the DBR computer to execute commands that changes
@@ -50,6 +49,7 @@ the frequency settings of the machine.
 		"""
 		assert not self._initialized, "Can only call when uninitialized"
 		self._server = ServerProxy('http://' + self._s + ":" + self._p)
+		self._server.listMethods()		#Does nothing but check if the connection is ok with the serverproxy
 		self._initialized = True
 
 	def LOband(self, band=2):
@@ -132,11 +132,8 @@ the frequency settings of the machine.
 		Must be initialized already.
 		"""
 		assert self._initialized, "Can only call when initialized"
-		try: return self._server.getStatus()
-		except : 
-			dummy_dbr=dummy_frontend.dummy_dbr()
-			status=dummy_dbr.getStatus()
-			return(status)
+		return self._server.getStatus()
+		
 
 	def get_value(self, variable):
 		"""
