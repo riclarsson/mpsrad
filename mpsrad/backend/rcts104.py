@@ -79,7 +79,6 @@ class rcts104:
 		greetings=self._socket.recv(1024)
 		assert len(greetings)>0,\
 			"Failed to connect to "+self._host+":"+str(self._tcp_port)
-
 		parse=greetings.replace(b'\n',b'').split(b'connected to ')[1].split(b' on ')
 		assert len(parse)==2, "Failed to read the greetings"
 
@@ -101,7 +100,6 @@ class rcts104:
 
 		# We are now initialized
 		self._initialized=True
-
 	init=_pc104connect
 
 	def _pc104disconnect(self):
