@@ -282,7 +282,7 @@ class measurements:
 					self.order[i]()
 				except:
 					function=self.order[i].__name__
-					self._dum_chop.run_issue(function,3)
+					self._dum_chop.run_issue(3,function)
 			
 				# print("adding time")
 				self._times.append(int(time.time()))
@@ -320,33 +320,33 @@ class measurements:
 					self._housekeeping[-1][14]=float(self._freq)
 					self._housekeeping[-1][15]=float(self._if)
 				except:
-					self._dum_HK.run_issue(None,3)
+					self._dum_HK.run_issue(3)
 
 				try:
 					debug_msg='wobbler_move'
 #					print("moving wobbler")
 					self.wob.move(self._wobbler_position[i])
 				except:
-					self._dum_wob.run_issue('MOVE',3)
+					self._dum_wob.run_issue(3,'MOVE')
 				
 				try:
 					debug_msg='spec_run'
 #					print("telling to gather data")
 					for s in self.spec: s.run()
-				except: self._dum_spec.run_issue('RUN',3)
+				except: self._dum_spec.run_issue(3,'RUN')
 				
 				try:
 					debug_msg='get_data'
 #					print("downloading data")
 					for s in self.spec: s.get_data(i)
-				except: self._dum_spec.run_issue('GET_DATA',3)
+				except: self._dum_spec.run_issue(3,'GET_DATA')
 
 				try:
 					debug_msg='wobbler_wait'
 #					print("waiting for wobbler")
 					self.wob.wait()
 				except: 
-					self._dum_wob.run_issue('WAIT',3)
+					self._dum_wob.run_issue(3,'WAIT')
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")

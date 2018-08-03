@@ -1,6 +1,8 @@
 """
 Author: Yann Goument
 
+Last modification : 03.08.2018
+
 Emulates the hardwares' function in case of malfunction
 """
 
@@ -34,13 +36,15 @@ class dummy_hardware:
 		print(" SWITCH ON DUMMY", self._name)
 		time.sleep(1)
 
-	def run_issue (self,function=None,time_wait=1):
+	def run_issue (self,time_wait=1,*args):
 		"""In case of error when running the measurements"""
 		time.sleep(time_wait)
-		if function == None:
+		l=len(args)
+		if l==0:
 			print("FUNCTIONS NON-AVAILABLE ON DUMMY", self._name)
 		else:
-			print("'",function,"' NON-AVAILABLE ON DUMMY", self._name)
+			for function in args:
+				print("'",function,"' NON-AVAILABLE ON DUMMY", self._name)
 
 	def save_issue (self):
 		"""In case of error when saving data"""

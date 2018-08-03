@@ -184,7 +184,7 @@ class MainWindow(QMainWindow):
 		try:
 			self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
 		except:
-			self.dum_dbr.run_issue('GET_STATUS',1.5)
+			self.dum_dbr.run_issue(1.5,'GET_STATUS')
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")
