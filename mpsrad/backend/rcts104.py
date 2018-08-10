@@ -17,11 +17,11 @@ class rcts104:
 	"""
 	def __init__(self,
 			name="rcts104",
-			frequency=[2100-210/2,2100+210/2],
+			frequency=[[2100-210/2,2100+210/2]],
 			host="sofia4",
 			tcp_port=1788,
 			udp_port=None,
-			channels=7504,
+			channels=[7504],
 			integration_time=1000,
 			blank_time=None,
 			data_storage_containers=4):
@@ -85,17 +85,17 @@ class rcts104:
 
 		# Initiate things on the machine
 		reply=self._send_cmd(b"cts config datafile "+self._stream)
-		self._channels=int(reply.split(b'channels ')[1].split(b' cycles')[0],0)
-		assert self._channels in [7504,4096], "Wrong number of channels: %d"%self._channels
+		self._channels=[int(reply.split(b'channels ')[1].split(b' cycles')[0],0)]
+		assert self._channels in [[7504],[4096]], "Wrong number of channels: %d"%self._channels
 
-		if self._channels==7504: self._send_cmd(b"cts init time 1.0")
+		if self._channels==[7504]: self._send_cmd(b"cts init time 1.0")
 		else: self._send_cmd(b"cts config time %.4f"%self._runtime)
 		self._send_cmd(b"cts init time %.4f"%self._runtime)
 
 		# Initiate data
 		self._data=[]
 		for i in range(self._copies_of_vectors):
-			self._data.append(np.zeros((self._channels,), dtype=np.float64))
+			self._data.append(np.zeros((self._channels[0],), dtype=np.float64))
 
 		# We are now initialized
 		self._initialized=True
@@ -152,7 +152,7 @@ class rcts104:
 		begin=time.time()
 
 		reply=b""
-		if self._channels==7504: end_cond=b"bufa "
+		if self._channels==[7504]: end_cond=b"bufa "
 		else: end_cond=b"swaplist {}}"
 
 		while reply.find(end_cond)==-1 and reply[-1:]!=b'\n' and\
@@ -164,7 +164,7 @@ class rcts104:
 		assert len(reply)>0, "Failed to attain data from the machine"
 		self._reply=reply	# test line
 
-		if self._channels==7504: 
+		if self._channels==[7504]: 
 			x=map(int,reply.split(b'{')[1].split(b'}')[0].split(b' '))
 		else:
 			x=map(int,reply.split(b'} \n')[1].split(b'\nread')[0].split(b'\n'))

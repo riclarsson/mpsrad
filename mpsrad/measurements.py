@@ -10,7 +10,8 @@ Run the measurements once all devices are initialized
 
 from mpsrad.wobbler import wobbler
 from mpsrad.chopper import chopper
-from mpsrad.backend.rcts104 import rcts104
+from mpsrad.backend import rcts104
+from mpsrad.backend import FW
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
@@ -34,12 +35,15 @@ class measurements:
 		integration_time=5000,
 		blank_time=5,
 		mode="antenna", basename='../data/',
-		raw_formats=[files.eform],
-		formatnames=['e'],
-		spectrometer_channels=[7504],
-		spectrometers=[rcts104],
-		spectrometer_hosts=['sofia4'], spectrometer_tcp_ports=[1788],
-		spectrometer_udp_ports=[None]):
+		raw_formats=[files.aform, files.eform, files.dform],
+		formatnames=[ 'a', 'e', 'd'],
+		spectrometer_channels=[[8192, 8192], [7504], [4096]],
+		spectrometers=[FW, rcts104, rcts104],
+		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]], [[1330, 1370]]],
+		spectrometer_hosts=['localhost', 'sofia4', 'waspam3'],
+		spectrometer_names=['AFFTS', '210 MHz CTS', '40 MHz CTS'],
+		spectrometer_tcp_ports=[25144, 1788, 1788],
+		spectrometer_udp_ports=[16210, None, None]):
 
 		""" Initialize the machine
 
@@ -129,7 +133,9 @@ class measurements:
 				host=spectrometer_hosts[i],
 				tcp_port=spectrometer_tcp_ports[i],
 				udp_port=spectrometer_udp_ports[i],
-				blank_time=blank_time))
+				blank_time=blank_time,
+				frequency=spectrometer_freqs[i],
+				name=spectrometer_names[i]))
 		self._spectrometers_count=len(self.spec)
 		assert self._spectrometers_count, "Must have at least one spectrometer"
 
@@ -325,15 +331,15 @@ class measurements:
 				try:
 					debug_msg='wobbler_move'
 #					print("moving wobbler")
+					time.sleep(0.5)
 					self.wob.move(self._wobbler_position[i])
 				except:
 					self._dum_wob.run_issue(3,'MOVE')
 				
-				try:
-					debug_msg='spec_run'
+				debug_msg='spec_run'
 #					print("telling to gather data")
-					for s in self.spec: s.run()
-				except: self._dum_spec.run_issue(3,'RUN')
+				for s in self.spec: s.run()
+				
 				
 				try:
 					debug_msg='get_data'

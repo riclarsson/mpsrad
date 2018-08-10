@@ -49,7 +49,7 @@ class wobbler:
 		Musn't be initialized already
 		"""
 		assert not self._initialized, "Cannot init initialized wobbler"
-		checkserial=serialCheck.serialcheck()  #make sure to use pyserial
+		serialCheck.serialcheck()  #make sure to use pyserial
 		# Open a serial port
 		self._serial=serial.Serial(self._device,self._baud,timeout=2)
 
@@ -63,22 +63,7 @@ class wobbler:
 		self._move(position)
 		self._wait()
 
-		if position-self._maxpos//2>0: dpos=-3000
-		else: dpos=3000
-
-		t=time()
-		self._move(position+dpos)
-		self._wait()
-		dt=time()-t
-
-		t=time()
-		self._move(position)
-		self._wait()
-
-		# at least the time required for 1 step
-		self._dt=time()-t
-		self._dt+=dt
-		self._dt/=6000.
+		self._dt = 0.0014511945645014446
 		
 		self._initialized=True
 

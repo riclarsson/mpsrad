@@ -20,12 +20,16 @@ import os
 
 eform = '>i16f7500f100f28f28f'
 
+dform = '>i16f4092f100f28f28f'
+
 aform = '>i16f16384f128f28f28f'
 
 
 def formatting(type='e'):
     if type == 'e':
         return eform
+    elif type == 'd':
+        return dform
     elif type == 'a':
         return aform
     else:

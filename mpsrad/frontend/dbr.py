@@ -49,7 +49,7 @@ the frequency settings of the machine.
 		"""
 		assert not self._initialized, "Can only call when uninitialized"
 		self._server = ServerProxy('http://' + self._s + ":" + self._p)
-		self._server.listMethods()		#Does nothing but check if the connection is ok with the serverproxy
+		#self._server.getStatus()  #Does nothing but check if the connection is ok with the serverproxy
 		self._initialized = True
 
 	def LOband(self, band=2):

@@ -2,7 +2,7 @@
 """
 Spectrometers plots widget
 
-Last modification: 24.07.2018
+Last modification: 07.08.2018
 
 Author: Borys Dabrowski
 """
@@ -25,7 +25,7 @@ from scipy.signal import savgol_filter
 # Modified CurvePlot class (added mouse zoom and pan) =========================
 class cPlot(CurvePlot):
 	"""Curves plot configuration
-	
+
 	.. note:: For more information about the CurvePlot's methods and attributes used here, please refer to the `CurvePlot documentation <https://pythonhosted.org/guiqwt/reference/curve.html#guiqwt.curve.CurvePlot>`_
 	"""
 	def __init__(self,axis=None,updateWidgets=None,*args,**kwargs):
@@ -190,39 +190,18 @@ class XYlim(DataSetEditGroupBox):
 		if axis[0]<axis[1] and axis[2]<axis[3]: self.setAxis(axis)
 # =============================================================================
 
-# Spectrometer plots panel ====================================================
-class SpectrometerPanel(QSplitter):
-	"""Modified CurvePlot class (with mouse zoom and pan)
-
-	.. note:: For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
-	"""
-	def __init__(self,parent,spec=None,
-		plots=[
-				[
-					{'name':'Raw spectra','curves':['Cold','Hot','Antenna']},
-					{'name':'System noise','curves':['Noise']}],
-				[
-					{'name':'Calibrated','curves':['Calibrated']},
-					{'name':'Integrated','curves':['Integrated']}]
-			]):
+# Plot panel ==================================================================
+class PlotPanel(QSplitter):
+	def __init__(self,parent,axisLimits=None,
+		plots=[[{'name':'P1','curves':['C1','C2']}]]):
 		QSplitter.__init__(self,parent)
 		self.parent=parent
-		self.spec=spec
-		self.name=self.spec.name if self.spec else 'Spectrometer'
 
 		self.plots=[p for c in plots for r in c for p in r['curves']]
-
-		self.Pc=self.Ph=self.Pa=self.Ta=self.Ti=self.Tr=None
-		self._mean={'count':0,'mean':0}
-		self.chopper_pos=None
-
 		self.active=None
-		
-		xlim=[0,40] if spec is None else spec.frequency
-		self.axisLimits=xlim+[0,400]
+		self.axisLimits=axisLimits
 
 		self.xylim=XYlim()
-
 		Filter=FilterWidget()
 
 		# Curve panels (plots)
@@ -266,6 +245,31 @@ class SpectrometerPanel(QSplitter):
 		self.addWidget(Hsplit)
 		self.setOrientation(Qt.Vertical)
 
+# Spectrometer plots panel ====================================================
+class SpectrometerPanel(PlotPanel):
+	"""Modified CurvePlot class (with mouse zoom and pan)
+
+	.. note:: For more information about the QSplitter's methods and attributes used here, please refer to the `QSplitter documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qsplitter.html>`_
+	"""
+	def __init__(self,parent,spec=None, count=0,
+		plots=[
+				[
+					{'name':'Raw spectra','curves':['Cold','Hot','Antenna']},
+					{'name':'System noise','curves':['Noise']}],
+				[
+					{'name':'Calibrated','curves':['Calibrated']},
+					{'name':'Integrated','curves':['Integrated']}]
+			]):
+		try: axisLimits=spec.frequency[count]+[0,400]
+		except: axisLimits=[0,40,0,400]
+		PlotPanel.__init__(self,parent=parent,plots=plots,axisLimits=axisLimits)
+		self.spec=spec
+		self.count = count
+		self.name=self.spec.name if self.spec else 'Spectrometer'
+
+		self.Pc=self.Ph=self.Pa=self.Ta=self.Ti=self.Tr=None
+		self._mean={'count':0,'mean':0}
+		self.chopper_pos=None
 
 		self.curves['Cold'].setPen(QPen(Qt.blue,1))
 		self.curves['Hot'].setPen(QPen(Qt.red,1))
@@ -280,9 +284,13 @@ class SpectrometerPanel(QSplitter):
 
 	def refreshTab(self,Tc,Th,order,chopper_pos):
 		d=dict(zip(order,self.spec._data))
-		if isinstance(self.spec._channels,list): ch=self.spec._channels[0]
-		else: ch=self.spec._channels
-		idx=range(0,ch)
+		if isinstance(self.spec._channels,list):
+			st=int(np.sum(self.spec._channels[:self.count]))
+			ch=self.spec._channels[self.count] + st
+		else:
+			ch=self.spec._channels
+			st = 0
+		idx=range(st,ch)
 		x=np.linspace(self.axisLimits[0],self.axisLimits[1],len(idx))
 
 		if not d[chopper_pos][idx].any(): return
@@ -318,6 +326,43 @@ class SpectrometerPanel(QSplitter):
 		self.curves['Integrated'].setplot(x,self.Ti)
 		self.curves['Noise'].setplot(x,self.Tr)
 
+# Summary plots panel =========================================================
+class SummaryPanel(PlotPanel):
+	def __init__(self,parent,tabs=[]):
+		r=range(len(tabs))
+		plots=[[
+			{'name':'Calibrated','curves':['Calibrated'+str(n) for n in r]},
+			{'name':'Integrated','curves':['Integrated'+str(n) for n in r]},
+			{'name':'System noise','curves':['Noise'+str(n) for n in r]},
+			]]
+
+		df=[n.axisLimits[1]-n.axisLimits[0] for n in tabs]
+		df2=max(df)/2
+
+		axisLimits=[-df2,df2,
+			min([n.axisLimits[2] for n in tabs]),
+			max([n.axisLimits[3] for n in tabs])
+			]
+
+		PlotPanel.__init__(self,parent=parent,plots=plots,axisLimits=axisLimits)
+		self.tabs=tabs
+		self.colors = [QPen(Qt.blue,1), QPen(Qt.red,1), QPen(Qt.black,1), QPen(Qt.cyan,1), QPen(Qt.green,1)]
+
+	def refreshTab(self):
+		if self.curves is None: return
+		for n,tab in enumerate(self.tabs):
+			df2=(tab.axisLimits[1]-tab.axisLimits[0])/2
+			x=np.linspace(-df2,df2,len(tab.Ta))
+
+			self.curves['Calibrated'+str(n)].setplot(x,tab.Ta)	
+			self.curves['Calibrated'+str(n)].setPen(self.colors[n%len(self.colors)])
+
+			self.curves['Integrated'+str(n)].setplot(x,tab.Ti)
+			self.curves['Integrated'+str(n)].setPen(self.colors[n%len(self.colors)])
+
+			self.curves['Noise'+str(n)].setplot(x,tab.Tr)
+			self.curves['Noise'+str(n)].setPen(self.colors[n%len(self.colors)])
+
 # Spectrometer panels in tabs =================================================
 class SpectrometerTabs(QTabWidget):
 	"""Tab of the interface to display the different curves
@@ -336,9 +381,11 @@ class SpectrometerTabs(QTabWidget):
 	def setTabs(self,spec=[]):
 		self.removeTabs()
 		self.spec=spec
-		self.sp=[SpectrometerPanel(self,spec=n) for n in self.spec]\
-			if self.spec else [SpectrometerPanel(self)]
-
+		if spec != []:
+			self.sp = [SpectrometerPanel(self,spec=n, count=c) for n in self.spec for c in range(len(n.frequency))]
+		else:
+			self.sp = [SpectrometerPanel(self)]
+			
 		for sp in self.sp:
 			vBoxlayout=QVBoxLayout()
 			vBoxlayout.addWidget(sp)
@@ -346,9 +393,17 @@ class SpectrometerTabs(QTabWidget):
 			tab.setLayout(vBoxlayout)
 			self.addTab(tab,sp.name)
 
+		tab=QWidget()
+		vBoxlayout=QVBoxLayout()
+		self.summary=SummaryPanel(self,tabs=self.sp)
+		vBoxlayout.addWidget(self.summary)
+		tab.setLayout(vBoxlayout)
+		self.addTab(tab,'Summary')
+
 	def removeTabs(self):
-		for n in enumerate(self.sp): self.removeTab(n[0])
+		for n in range(len(self.sp)+1): self.removeTab(n)
 
 	def refreshTabs(self,Tc=14,Th=300,order=['C0','A0','H0','A1'],m_count=0):
 		for n in self.sp: n.refreshTab(Tc,Th,order,m_count)
+		self.summary.refreshTab()
 # =============================================================================

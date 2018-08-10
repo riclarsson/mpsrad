@@ -160,10 +160,11 @@ class MainWindow(QMainWindow):
 		self.time=localtime()
 
 		try:
-			self.HKvalues.updateHK(self.dbr.get_status(),self.Controlvalues)
+			self.HKvalues.updateHK()
 		except:
-			self.dum_dbr=dummy_hardware('dbr')
-			self.dum_dbr.issue('get_status')
+			pass
+			#self.dum_dbr=dummy_hardware('dbr')
+			#self.dum_dbr.run_issue(1, 'get_status')
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")
