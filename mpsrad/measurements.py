@@ -8,15 +8,17 @@ Author: Richard Larsson
 Run the measurements once all devices are initialized
 """
 
-from mpsrad.wobbler import wobbler
+from mpsrad.wobbler import IRAM
+from mpsrad.wobbler import WVR
 from mpsrad.chopper import chopper
-from mpsrad.backend import rcts104
-from mpsrad.backend import FW
 from mpsrad.wiltron68169B import wiltron68169B
+from mpsrad.housekeeping.Agilent import Agilent34970A
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
 from . import dummy_hardware
+from . import settings
+from mpsrad.helper import APCUPS
 
 import time
 import datetime
@@ -25,25 +27,30 @@ import numpy as np
 
 class measurements:
 	"""Run the measurements once all devices are initialized"""
-	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
-		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
-		freq_range=(214, 270),
-		wobbler_device="/dev/ttyS0", wobbler_address=b'0',
-		wiltron68169B_address=5,
-		chopper_device="/dev/chopper", antenna_offset=1000,
-		dbr_port=1080, dbr_server="dbr",
-		integration_time=5000,
-		blank_time=5,
-		mode="antenna", basename='../data/',
-		raw_formats=[files.aform, files.eform, files.dform],
-		formatnames=[ 'a', 'e', 'd'],
-		spectrometer_channels=[[8192, 8192], [7504], [4096]],
-		spectrometers=[FW, rcts104, rcts104],
-		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]], [[1330, 1370]]],
-		spectrometer_hosts=['localhost', 'sofia4', 'waspam3'],
-		spectrometer_names=['AFFTS', '210 MHz CTS', '40 MHz CTS'],
-		spectrometer_tcp_ports=[25144, 1788, 1788],
-		spectrometer_udp_ports=[16210, None, None]):
+	def __init__(self, sweep=settings.sweep, freq=settings.freq, 
+		freq_step=settings.freq_step, if_offset=settings.if_offset,
+		sweep_step=settings.sweep_step, full_file=settings.full_file,
+		repeat=settings.repeat, wait=settings.wait,
+		freq_range=settings.freq_range,
+		wobbler_device=settings.wobbler_device,
+		wobbler_address=settings.wobbler_address,
+		measurement_type=settings.measurement_type,
+		wiltron68169B_address=settings.wiltron68169B_address,
+		chopper_device=settings.chopper_device,
+		antenna_offset=settings.antenna_offset,
+		dbr_port=settings.dbr_port, dbr_server=settings.dbr_server,
+		integration_time=settings.integration_time,
+		blank_time=settings.blank_time,
+		mode=settings.mode, basename=settings.basename,
+		raw_formats=settings.raw_formats,
+		formatnames=settings.formatnames,
+		spectrometer_channels=settings.spectrometer_channels,
+		spectrometers=settings.spectrometers,
+		spectrometer_freqs=settings.spectrometer_freqs,
+		spectrometer_hosts=settings.spectrometer_hosts,
+		spectrometer_names=settings.spectrometer_names,
+		spectrometer_tcp_ports=settings.spectrometer_tcp_ports,
+		spectrometer_udp_ports=settings.spectrometer_udp_ports):
 
 		""" Initialize the machine
 
@@ -104,9 +111,13 @@ class measurements:
 		assert not (full_file % 4), "Must have full series in file"
 		assert wait >= 0.0, "Cannot have negative waiting time"
 
-		# Sets the wobbler interactions
-		self.wob=wobbler.wobbler(device=wobbler_device,address=wobbler_address)
+		self.measurement_type=measurement_type
 
+		# Sets the wobbler interactions
+		if self.measurement_type=='WVR':
+			self.wob=WVR.wobbler(device=wobbler_device,address=wobbler_address)
+		else:
+			self.wob=IRAM.wobbler(device=wobbler_device,address=wobbler_address)
 		# Sets the chopper interactions
 		self.chop=chopper.chopper(device=chopper_device,offset=antenna_offset)
 		if mode == 'antenna':
@@ -139,11 +150,12 @@ class measurements:
 		self._spectrometers_count=len(self.spec)
 		assert self._spectrometers_count, "Must have at least one spectrometer"
 
-		# Sets the LO interactions
-		self.lo=wiltron68169B(address=wiltron68169B_address)
-
-		# Sets the DBR interactions
-		self.dbr=dbr(port=dbr_port, server=dbr_server)
+		if self.measurement_type=='IRAM':
+			# Sets the LO interactions
+			self.lo=wiltron68169B(address=wiltron68169B_address)
+			self.dbr=dbr(port=dbr_port, server=dbr_server)
+		else:
+			self.multimeter=Agilent34970A()
 
 		# Sets the file interactions
 		self.raw=[]
@@ -151,7 +163,8 @@ class measurements:
 			self.raw.append(files.raw(format=raw_formats[i]))
 
 #		self.temperature=pt100()
-		self.temperature=sensors()
+		if self.measurement_type=='IRAM':
+			self.temperature=sensors()
 
 		# Constants
 		self._sweep=sweep
@@ -169,6 +182,8 @@ class measurements:
 
 		# Counter
 		self._i=0
+		
+		self._ups = APCUPS()
 
 		self._initialized=False
 
@@ -201,21 +216,27 @@ class measurements:
 				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
 				self._dum_spec.init()
 
-			print("Init LO")
-			try: self.lo.init()  # Does nothing but confirms connection
-			except: pass
+			if self.measurement_type=='IRAM':
+				print("Init LO")
+				try: self.lo.init()  # Does nothing but confirms connection
+				except: pass
 
-			print("Init DBR")
-			try: self.dbr.init()  # Does nothing but confirms connection
-			except:
-				self._dum_dbr=dummy_hardware.dummy_hardware('DBR')
-				self._dum_dbr.init()
+				print("Init DBR")
+				try: self.dbr.init()  # Does nothing but confirms connection
+				except:
+					self._dum_dbr=dummy_hardware.dummy_hardware('DBR')
+					self._dum_dbr.init()
 
-			print("Init thermometer")
-			try: self.temperature.init()  # Does nothing but confirms connection
-			except:
-				self._dum_HK=dummy_hardware.dummy_hardware('HOUSEKEEPING')
-				self._dum_HK.init()
+				print("Init thermometer")
+				try: self.temperature.init()  # Does nothing but confirms connection
+				except:
+					self._dum_HK=dummy_hardware.dummy_hardware('HOUSEKEEPING')
+					self._dum_HK.init()
+			else:
+				print("Init multimeter")
+				self.multimeter.init()  # Does nothing but confirms connection
+				
+			self._ups.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -239,16 +260,17 @@ class measurements:
 				time.sleep(0.5)
 				print("NOT CONNECTED TO WOBBLER")
 			
-			try:
-				print("Set frequency")
-				self.set_frequency(self._freq)
-			except:
-				print("ERROR IN SETTING THE FREQUENCY")
-				time.sleep(0.5)
-				print("NOT CONNECTED TO DBR")
-			
+			if self.measurement_type=='IRAM':
+				try:
+					print("Set frequency")
+					self.set_frequency(self._freq)
+				except:
+					print("ERROR IN SETTING THE FREQUENCY")
+					time.sleep(0.5)
+					print("NOT CONNECTED TO DBR")
+
 			print("Set filename")
-			self.set_filenames() 
+			self.set_filenames()
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -292,41 +314,61 @@ class measurements:
 			
 				# print("adding time")
 				self._times.append(int(time.time()))
+				
+				ups_active, ups_power = self._ups.run()
+				UPS_ERROR = 50
+				if ups_active == 1:
+					pass  # UPS is active and all is fine
+				elif ups_active == 0:
+					if ups_power < UPS_ERROR:  # Shutdown at 50% power
+						self.close()
+						time.sleep(3)
+						self._ups.close()
+					else:
+						print('UPS is on Battery.', ups_power,
+						      '% power remaining.  Will shutdown when',
+						      'less than', UPS_ERROR, '% remains')
+						pass  # UPS is inactive but power is still high
+				else:
+					pass  # The trick is, that there is no UPS
 
 				# This is where housekeeping data should go...
 #				print("generating housekeeping")
-				
-				try:
-					debug_msg='housekeeping'
-					
+				if self.measurement_type=='IRAM':
+					try:
+						debug_msg='housekeeping'
+						self._housekeeping.append(np.zeros((16)))
+
+						debug_msg='HK_cryo'
+						self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
+
+						debug_msg='HK_temps'
+						sensors=self.temperature.get_values()
+						self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
+						self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
+						self._housekeeping[-1][3]=sensors['Humidity']
+
+						debug_msg='HK_chopper_pos'
+	#					self._housekeeping[-1][4]=ord(self.get_order()[i])
+						self._housekeeping[-1][4]=self.chop.get_pos()[0]
+
+						debug_msg='HK_dbr'
+						self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
+						self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
+						self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
+						self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
+						self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
+						self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
+						self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
+						self._housekeeping[-1][13]=float(self._ref)
+						self._housekeeping[-1][14]=float(self._freq)
+						self._housekeeping[-1][15]=float(self._if)
+					except:
+						self._dum_HK.run_issue(3)
+				else:
+					debug_msg='HK_Agilent'
 					self._housekeeping.append(np.zeros((16)))
-
-					debug_msg='HK_cryo'
-					self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
-
-					debug_msg='HK_temps'
-					sensors=self.temperature.get_values()
-					self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
-					self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
-					self._housekeeping[-1][3]=sensors['Humidity']
-
-					debug_msg='HK_chopper_pos'
-	#				self._housekeeping[-1][4]=ord(self.get_order()[i])
-					self._housekeeping[-1][4]=self.chop.get_pos()[0]
-
-					debug_msg='HK_dbr'
-					self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
-					self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
-					self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
-					self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
-					self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
-					self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
-					self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
-					self._housekeeping[-1][13]=float(self._ref)
-					self._housekeeping[-1][14]=float(self._freq)
-					self._housekeeping[-1][15]=float(self._if)
-				except:
-					self._dum_HK.run_issue(3)
+					self._housekeeping[-1][1:]=self.multimeter.getSensors()
 
 				try:
 					debug_msg='wobbler_move'
@@ -340,12 +382,9 @@ class measurements:
 #					print("telling to gather data")
 				for s in self.spec: s.run()
 				
-				
-				try:
-					debug_msg='get_data'
+				debug_msg='get_data'
 #					print("downloading data")
-					for s in self.spec: s.get_data(i)
-				except: self._dum_spec.run_issue(3,'GET_DATA')
+				for s in self.spec: s.get_data(i)
 
 				try:
 					debug_msg='wobbler_wait'
@@ -516,6 +555,12 @@ class measurements:
 				print('Closed connection with spectrometer '+str(i))
 				i+=1
 				n+=1
+		except:
+			pass
+		try:
+			self.multimeter.close()
+			n+=1
+			print('Closed multimeter connection')
 		except:
 			pass
 		try:

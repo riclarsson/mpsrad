@@ -313,9 +313,9 @@ class Agilent34970A:
 		"""
 
 		if v<0.5: return -3.									# sensor error
-		elif v>=0.5 & v<=1.82: return -1.						# underrange
-		elif v>1.82 & v<8.6: return 1e-8*(10.**((v-2.)/.6))		# measurement ok
-		elif v>=8.6 & v<=9.5: return -2.						# overrange
+		elif v>=0.5 and v<=1.82: return -1.						# underrange
+		elif v>1.82 and v<8.6: return 1e-8*(10.**((v-2.)/.6))		# measurement ok
+		elif v>=8.6 and v<=9.5: return -2.						# overrange
 		else: return -4.										# Pirani sensor defect
 
 	def PKR251_Identification(self,v):
@@ -337,8 +337,8 @@ class Agilent34970A:
 		"""
 
 		if v<=.1: return -2.				#short circuit in sensor
-		elif v>.1 & v<=2.4: return 1.		# combined Pirani/Cold Cathode mode
-		elif v> 2.4 & v<=14.: return 0.		# pure Pirani mode
+		elif v>.1 and v<=2.4: return 1.		# combined Pirani/Cold Cathode mode
+		elif v> 2.4 and v<=14.: return 0.		# pure Pirani mode
 		else: return -1.					# no pressore sensor connected
 
 

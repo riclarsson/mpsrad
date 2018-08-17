@@ -121,6 +121,7 @@ class rcts104:
 		self._socket.setblocking(1)	# make socket blocking
 		self._socket.sendall(command+b"\n")
 		reply=self._socket.recv(1024)
+		print(self.name, reply)
 		return reply
 
 	def run(self):
@@ -155,7 +156,7 @@ class rcts104:
 		if self._channels==[7504]: end_cond=b"bufa "
 		else: end_cond=b"swaplist {}}"
 
-		while reply.find(end_cond)==-1 and reply[-1:]!=b'\n' and\
+		while (reply.find(end_cond)==-1 or reply[-1:]!=b'\n') and\
 				time.time()-begin<self._runtime*2:
 			time.sleep(0.1)
 			try: reply+=self._socket.recv(65536)
