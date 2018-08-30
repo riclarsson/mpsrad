@@ -21,6 +21,7 @@ class FW:
             library=None,
             name='AFFTS',
             frequency=[[0,1500]],
+            f0=None,
             host='localhost',
             tcp_port=25144,
             udp_port=16210,
@@ -51,6 +52,7 @@ class FW:
         assert integration_time < 5001,"5000 ms integration time is maximum"
 
         self.name=name
+        self.f0=f0
 
         self._bytes=np.sum(channels)*4
         self._boards=len(channels)
@@ -180,6 +182,15 @@ class FW:
         else: np.savetxt(basename+filename,self._data)
 
         self._time=''
+
+    def set_housekeeping(self, hk):
+        """ Sets the housekeeping data dictionary.  hk must be dictionary """
+        assert self._initialized, "Can set housekeeping when initialized"
+
+        hk['Instrument'][self.name] = {}
+        hk['Instrument'][self.name]['Frequency [MHz]'] = self.frequency
+        hk['Instrument'][self.name]['Channels [#]'] = self._channels
+        hk['Instrument'][self.name]['Integration [micro-s]'] = self._integration_time
 
     def close(self):
         """Disconnect from both servers of the AFFTS and sends stop to AFFTS

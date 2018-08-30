@@ -24,6 +24,9 @@ dform = '>i16f4092f100f28f28f'
 
 aform = '>i16f16384f128f28f28f'
 
+xform = '>i16f1018f128f28f28f'
+
+xtest2form = '>i16f1019f2065i128f28f28f'
 
 def formatting(type='e'):
     if type == 'e':
@@ -32,6 +35,10 @@ def formatting(type='e'):
         return dform
     elif type == 'a':
         return aform
+    elif type == 'x':
+        return xform
+    elif type == 'xtest2':
+        return xtest2form
     else:
         return None
 
@@ -522,19 +529,19 @@ class averaging(_files):
 
 class raw(_files):
     """**INFO**"""
-    def __init__(self, format=eform):
+    def __init__(self, formatting):
         """
         Parameters:
             format (str):
                 set the format of the file. Either eform or aform
         """
-        assert format[0] == '>', "Must use big-endian to read and store data"
-        assert format[1] == 'i', "Must use index time-stamp as first variable"
+        assert formatting[0] == '>', "Must use big-endian to read and store data"
+        assert formatting[1] == 'i', "Must use index time-stamp as first variable"
 
-        self._struct = struct.Struct(format)
+        self._struct = struct.Struct(formatting)
         self._size = self._struct.size
         self._data_field = 1
-        self._get_format(format)
+        self._get_format(formatting)
 
     def average_raw(self):
         """Averages a raw field and returns the vector to check for variations.
@@ -610,6 +617,45 @@ class raw(_files):
 
         # print("appending data")
         p += struct.pack('>'+str(self._format[1])+'f', *data)
+
+        # print("appending noise")
+        s = self._format[-3]
+        p += struct.pack('>'+str(s)+'f', *np.zeros((s)))
+
+        # print("appending filters")
+        s = self._format[-1]+self._format[-2]
+        p += struct.pack('>'+str(s)+'f', *np.zeros((s)))
+
+        if os.path.exists(filename):
+            a = open(filename, 'ab')
+        else:
+            a = open(filename, 'wb')
+        a.write(p)
+        a.close()
+
+    def append_to_testfile(self, filename, time, housekeeping, data, test):
+        """
+        Parameters:
+            filename (str):
+                Name of the file where to save
+            time (num):
+                **INFO**
+            housekeeping (**INFO**):
+                **INFO**
+            data (**INFO**):
+                **INFO**
+        """
+        # print("appending time")
+        p = struct.pack('>I', time)
+
+        # print("appending housekeeping")
+        p += struct.pack('>'+str(self._format[0])+'f', *housekeeping)
+
+        # print("appending data")
+        p += struct.pack('>'+str(self._format[1])+'f', *data)
+
+        # print("appending test")
+        p += struct.pack('>'+str(self._format[2])+'i', *test)
 
         # print("appending noise")
         s = self._format[-3]

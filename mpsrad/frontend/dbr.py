@@ -228,6 +228,24 @@ the frequency settings of the machine.
 		else:
 			return -1.0
 
+	def set_housekeeping(self, hk):
+		""" Sets the housekeeping data dictionary.  hk must be dictionary """
+		assert self._initialized, "Can set housekeeping when initialized"
+
+		hk['Environment']['Cold Load [K]'] = float(self.get_value('cryo.ColdLd.val'))
+
+		hk['Instrument']['DBR'] = {'Band 2': {}, 'Band 3': {}, 'Status': {}}
+
+		hk['Instrument']['DBR']['Band 2']['T [K]'] = float(self.get_value('cryo.Band2.val'))
+		hk['Instrument']['DBR']['Band 3']['T [K]'] = float(self.get_value('cryo.Band3.val'))
+
+		hk['Instrument']['DBR']['Band 2']['LO [GHz]'] = float(self.get_value('B2.flo.req'))
+		hk['Instrument']['DBR']['Band 3']['LO [GHz]'] = float(self.get_value('B3.flo.req'))
+
+		hk['Instrument']['DBR']['Status']['77 K Plate [K]'] = float(self.get_value('cryo.T_77K.val'))
+		hk['Instrument']['DBR']['Status']['15 K Plate [K]'] = float(self.get_value('cryo.T_15K.val'))
+		hk['Instrument']['DBR']['Status']['04 K Plate [K]'] = float(self.get_value('cryo.T_04K.val'))
+
 	def close(self):
 		"""Close tthe connection with the server
 

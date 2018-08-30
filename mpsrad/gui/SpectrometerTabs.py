@@ -9,7 +9,7 @@ Author: Borys Dabrowski
 # =============================================================================
 
 # Imports and definitions =====================================================
-from guidata.qt.QtGui import QSplitter,QPen,QTabWidget,QWidget,QVBoxLayout
+from guidata.qt.QtGui import QSplitter,QPen,QTabWidget,QWidget,QVBoxLayout,QColor
 from guidata.dataset.datatypes import DataSet
 from guidata.dataset.dataitems import FloatItem,IntItem
 from guidata.dataset.qtwidgets import DataSetEditGroupBox
@@ -21,6 +21,8 @@ from guiqwt.builder import make
 
 import numpy as np
 from scipy.signal import savgol_filter
+
+from matplotlib.pyplot import get_cmap
 
 # Modified CurvePlot class (added mouse zoom and pan) =========================
 class cPlot(CurvePlot):
@@ -112,8 +114,23 @@ class cPlot(CurvePlot):
 		if self.axis is None: return
 		self.setAxis()
 
-#	def wheelEvent(self,evnt):
-#		if self.isActive(): print(evnt)
+	def wheelEvent(self,evnt):
+		if self.axis is None: return
+		self.setActive()
+		axis=self.tmp_axis
+		dy=evnt.angleDelta().y()
+		
+		scrolling_speed = 7  # percent
+		if dy<0:
+			d = 1 - scrolling_speed / 100
+		elif dy>0:
+			d = 1/(1 - scrolling_speed / 100)
+		else: d=1
+		dy = (axis[3]-axis[2]) * (1 - d)
+		rel_y = evnt.y()/self.size().height()  # FIXME: This is not center of pointer...
+		axis[2] += dy * (1 - rel_y)
+		axis[3] -= dy * rel_y
+		self.setAxis(axis)
 # =============================================================================
 
 # Modified CurveItem (added filter and autoscale) =============================
@@ -310,6 +327,7 @@ class SpectrometerPanel(PlotPanel):
 
 			# integrated spectrum
 			sc,self.Ti=self._mean['count']+1,self._mean['mean']
+				
 			self.Ti=(self.Ti*(sc-1)+self.Ta)/sc
 			self._mean['count'],self._mean['mean']=sc,self.Ti
 
@@ -330,10 +348,19 @@ class SpectrometerPanel(PlotPanel):
 class SummaryPanel(PlotPanel):
 	def __init__(self,parent,tabs=[]):
 		r=range(len(tabs))
+		
+		# Prepare unique names in ugly manner
+		self.names = [n.spec.name for n in tabs] if tabs[0].spec is not None else ['']
+		test = []
+		for n in r:
+			if self.names.count(self.names[n]) > 1 or self.names[n] in test:
+				test.append(self.names[n])
+				self.names[n] += ' {}'.format(test.count(self.names[n]))
+		
 		plots=[[
-			{'name':'Calibrated','curves':['Calibrated'+str(n) for n in r]},
-			{'name':'Integrated','curves':['Integrated'+str(n) for n in r]},
-			{'name':'System noise','curves':['Noise'+str(n) for n in r]},
+			{'name':'Calibrated','curves':['Calibrated ' + self.names[n] for n in r]},
+			{'name':'Integrated','curves':['Integrated ' + self.names[n] for n in r]},
+			{'name':'System noise','curves':['Noise ' + self.names[n] for n in r]},
 			]]
 
 		df=[n.axisLimits[1]-n.axisLimits[0] for n in tabs]
@@ -346,22 +373,42 @@ class SummaryPanel(PlotPanel):
 
 		PlotPanel.__init__(self,parent=parent,plots=plots,axisLimits=axisLimits)
 		self.tabs=tabs
-		self.colors = [QPen(Qt.blue,1), QPen(Qt.red,1), QPen(Qt.black,1), QPen(Qt.cyan,1), QPen(Qt.green,1)]
+		cmap=get_cmap('tab10',len(tabs))
+		self.colors = [QPen(QColor(x[0]*255, x[1]*255, x[2]*255),1) for x in cmap.colors]
+		
+		cPanel=self.curves['Calibrated ' + self.names[0]].parent
+		cPanel.add_item(make.legend("BL"))
+		cPanel.setActive()
+		cPanel=self.curves['Integrated ' + self.names[0]].parent
+		cPanel.add_item(make.legend("BL"))
+		cPanel.setActive()
+		cPanel=self.curves['Noise ' + self.names[0]].parent
+		cPanel.add_item(make.legend("BL"))
+		cPanel.setActive()
 
 	def refreshTab(self):
 		if self.curves is None: return
 		for n,tab in enumerate(self.tabs):
-			df2=(tab.axisLimits[1]-tab.axisLimits[0])/2
-			x=np.linspace(-df2,df2,len(tab.Ta))
 
-			self.curves['Calibrated'+str(n)].setplot(x,tab.Ta)	
-			self.curves['Calibrated'+str(n)].setPen(self.colors[n%len(self.colors)])
+			f0=tab.spec.f0
+			if f0 is None:
+				df2=(tab.axisLimits[1]-tab.axisLimits[0])/2
+				x=np.linspace(-df2,df2,len(tab.Ta))
+			else:
+				x=np.linspace(tab.axisLimits[0]-f0,tab.axisLimits[1]-f0,len(tab.Ta))
 
-			self.curves['Integrated'+str(n)].setplot(x,tab.Ti)
-			self.curves['Integrated'+str(n)].setPen(self.colors[n%len(self.colors)])
+			self.curves['Calibrated ' + self.names[n]].setplot(x,tab.Ta)	
+			self.curves['Calibrated ' + self.names[n]].setPen(self.colors[n%len(self.colors)])
+			self.curves['Calibrated ' + self.names[n]].parent.set_titles(ylabel=u'Temperature')
 
-			self.curves['Noise'+str(n)].setplot(x,tab.Tr)
-			self.curves['Noise'+str(n)].setPen(self.colors[n%len(self.colors)])
+
+			self.curves['Integrated ' + self.names[n]].setplot(x,tab.Ti)
+			self.curves['Integrated ' + self.names[n]].setPen(self.colors[n%len(self.colors)])
+			self.curves['Integrated ' + self.names[n]].parent.set_titles(ylabel=u'Temperature')
+
+			self.curves['Noise ' + self.names[n]].setplot(x,tab.Tr)
+			self.curves['Noise ' + self.names[n]].setPen(self.colors[n%len(self.colors)])
+			self.curves['Noise ' + self.names[n]].parent.set_titles(ylabel=u'Temperature')
 
 # Spectrometer panels in tabs =================================================
 class SpectrometerTabs(QTabWidget):

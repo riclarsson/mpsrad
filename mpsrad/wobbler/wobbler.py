@@ -267,6 +267,12 @@ class wobbler:
 		"""
 		assert self._initialized, "Must first initialize the wobbler"
 		return self._read(timeout)
+	
+	def set_housekeeping(self, hk):
+		""" Sets the housekeeping data dictionary.  hk must be dictionary """
+		assert self._initialized, "Can set housekeeping when initialized"
+		
+		hk['Instrument']['Wobbler'] = {'Position': self._pos}
 
 	def _read(self,timeout=.5):
 		"""Read answer and get info from it:

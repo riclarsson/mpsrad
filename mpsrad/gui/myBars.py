@@ -11,6 +11,7 @@ Author: Borys Dabrowski
 # Imports and definitions =====================================================
 from guidata.qt.QtGui import QLabel,QStatusBar,QToolBar,QToolButton
 from guidata.qt.QtCore import QSize
+import mpsrad
 
 import sys,io
 # =============================================================================
@@ -78,6 +79,12 @@ class ToolBar(QToolBar):
 		self.resizeX=False
 		self.resizeY=False
 
+		ButtonAxisReset=QToolButton()
+		ButtonAxisReset.setCheckable(False)
+		ButtonAxisReset.setIcon(getIcon("reset"))
+		ButtonAxisReset.setToolTip(u"Reset Integration")
+		ButtonAxisReset.released.connect(self.reset_integration)
+
 		ButtonAxisX=QToolButton()
 		ButtonAxisX.setCheckable(True)
 		ButtonAxisX.setChecked(True)
@@ -111,14 +118,115 @@ class ToolBar(QToolBar):
 		self.addSeparator()
 		self.addWidget(ButtonAxisX)
 		self.addWidget(ButtonAxisY)
+		self.addSeparator()
+		self.addWidget(ButtonAxisReset)
 
 	def toggleX(self,*args):
 		self.resizeX= not self.resizeX
 	def toggleY(self,*args):
 		self.resizeY= not self.resizeY
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Intentionally left blank
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+		
+		
+		
+	def reset_integration(self,*args):
+		try:
+			for tab in mpsrad.gui.guiIRAM.window.centralwidget.tabs.sp:
+				tab._mean['count'] = 0
+		except:
+			print("Can only reset existing measurements")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Intentionally left blank
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	def getX(self):
 		return self.resizeX
 	def getY(self):
 		return self.resizeY
+	def getReset(self):
+		return True
 # =============================================================================

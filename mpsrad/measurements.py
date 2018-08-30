@@ -11,6 +11,8 @@ Run the measurements once all devices are initialized
 from mpsrad.wobbler import wobbler
 from mpsrad.chopper import chopper
 from mpsrad.backend import rcts104
+from mpsrad.backend import pc104
+from mpsrad.backend import acs
 from mpsrad.backend import FW
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.sensors import sensors
@@ -35,15 +37,16 @@ class measurements:
 		integration_time=5000,
 		blank_time=5,
 		mode="antenna", basename='../data/',
-		raw_formats=[files.aform, files.eform, files.dform],
-		formatnames=[ 'a', 'e', 'd'],
-		spectrometer_channels=[[8192, 8192], [7504], [4096]],
-		spectrometers=[FW, rcts104, rcts104],
-		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]], [[1330, 1370]]],
-		spectrometer_hosts=['localhost', 'sofia4', 'waspam3'],
-		spectrometer_names=['AFFTS', '210 MHz CTS', '40 MHz CTS'],
-		spectrometer_tcp_ports=[25144, 1788, 1788],
-		spectrometer_udp_ports=[16210, None, None]):
+		raw_formats=[files.aform, files.eform, files.dform, files.dform, files.xtest2form],
+		formatnames=[ 'a', 'e', 'd', 'd', 'xtest2'],
+		spectrometer_channels=[[8192, 8192], [7504], [4096], [4096], [1023]],
+		spectrometers=[FW, rcts104, rcts104, pc104, acs],
+		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]],
+							[[1330, 1370]], [[1330, 1370]], [[4400,8800]]],
+		spectrometer_hosts=['localhost', 'sofia4', "waspam3", "pc104", None],
+		spectrometer_names=['AFFTS', '210 MHz CTS', "40 MHz CTS RCTS", "40 MHz CTS PC104", 'ACS'],
+		spectrometer_tcp_ports=[25144, 1788, 1788, 1725, None],
+		spectrometer_udp_ports=[16210, None, None, None, None]):
 
 		""" Initialize the machine
 
@@ -148,7 +151,7 @@ class measurements:
 		# Sets the file interactions
 		self.raw=[]
 		for i in range(self._spectrometers_count):
-			self.raw.append(files.raw(format=raw_formats[i]))
+			self.raw.append(files.raw(formatting=raw_formats[i]))
 
 #		self.temperature=pt100()
 		self.temperature=sensors()
@@ -171,6 +174,13 @@ class measurements:
 		self._i=0
 
 		self._initialized=False
+		
+		self.housekeeping = {"Instrument": {},
+							"Environment": {"Room [K]": 300.,
+											"Cold Load [K]": 0.12,
+											"Hot Load [K]": 500.,
+											"Outdoors [K]": 2345.,
+											"Humidity [%]": 1234.0}}
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
@@ -192,10 +202,9 @@ class measurements:
 			except: 
 				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
 				self._dum_chop.init()
-
-			print("Init spectrometers")
 			try:
 				for s in self.spec:
+					print("Init spectrometer:", s.name)
 					s.init()  # Can set nothing
 			except:
 				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
@@ -299,9 +308,15 @@ class measurements:
 				try:
 					debug_msg='housekeeping'
 					
+					for n in [self.dbr, self.temperature, self.chop, self.wob]: 
+						n.set_housekeeping(self.housekeeping)
+						
+					for n in self.spec:
+						n.set_housekeeping(self.housekeeping)
+					
 					self._housekeeping.append(np.zeros((16)))
 
-					debug_msg='HK_cryo'
+#					debug_msg='HK_cryo'
 					self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
 
 					debug_msg='HK_temps'
@@ -312,7 +327,8 @@ class measurements:
 
 					debug_msg='HK_chopper_pos'
 	#				self._housekeeping[-1][4]=ord(self.get_order()[i])
-					self._housekeeping[-1][4]=self.chop.get_pos()[0]
+					hkpos=self.chop.get_pos()[0]
+					self._housekeeping[-1][4]=hkpos
 
 					debug_msg='HK_dbr'
 					self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
@@ -338,8 +354,9 @@ class measurements:
 				
 				debug_msg='spec_run'
 #					print("telling to gather data")
-				for s in self.spec: s.run()
-				
+				for s in self.spec:
+					s.dB = 7. if hkpos==ord('C') else 7.
+					s.run()
 				
 				try:
 					debug_msg='get_data'
@@ -380,12 +397,14 @@ class measurements:
 		try:
 			for i in range(4):
 				# Need to take into account multiple spectrometers sometime...
-				try:
-					print('saving spectra '+str(self._i*4+i))
-					for j in range(self._spectrometers_count):
+				print('saving spectra '+str(self._i*4+i))
+				for j in range(self._spectrometers_count):
+					if 'test' in self._formatnames[j]:
+						self.raw[j].append_to_testfile(self._files[j], self._times[i],
+							self._housekeeping[i],self.spec[j]._data[i][2:-2], self.spec[j]._testarray)
+					else:
 						self.raw[j].append_to_file(self._files[j], self._times[i],
 							self._housekeeping[i],self.spec[j]._data[i][2:-2])
-				except: self._dum_spec.save_issue()
 					
 		except KeyboardInterrupt:
 			self.close()
