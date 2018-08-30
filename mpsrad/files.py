@@ -530,16 +530,16 @@ class averaging(_files):
 
 class raw(_files):
     """**INFO**"""
-    def __init__(self, formatting):
+    def __init__(self, format=eform):
         """
         Parameters:
             format (str):
                 set the format of the file. Either eform or aform
         """
-        assert formatting[0] == '>', "Must use big-endian to read and store data"
-        assert formatting[1] == 'i', "Must use index time-stamp as first variable"
+        assert format[0] == '>', "Must use big-endian to read and store data"
+        assert format[1] == 'i', "Must use index time-stamp as first variable"
 
-        self._struct = struct.Struct(formatting)
+        self._struct = struct.Struct(format)
         self._size = self._struct.size
         self._data_field = 1
         self._get_format(formatting)
