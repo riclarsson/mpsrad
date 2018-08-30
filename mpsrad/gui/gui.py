@@ -17,7 +17,7 @@ from time import localtime
 
 from mpsrad.gui.myIcons import myIcons
 from mpsrad.gui.SpectrometerTabs import SpectrometerTabs
-from mpsrad.gui.HK_control_IRAM import HKwidget,Controlwidget
+from mpsrad.gui.HK_control_WVR import HKwidget,Controlwidget
 from mpsrad.gui.myBars import StatusBar,ToolBar
 
 from mpsrad.measurements import measurements
@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
 #			spectrometer_channels=[[8192,8192]],
 #			formatnames=c.Format,raw_formats=[form[f] for f in c.Format],
 			basename=c.Directory+('' if c.Directory[-1] is '/' else '/'),
-			sweep=c.Sweep,
+			#sweep=c.Sweep,
 			full_file=c.NSpec,
 			freq=c.Frequency,
 			integration_time=int(c.IntegrationTime*1000.),
@@ -160,7 +160,10 @@ class MainWindow(QMainWindow):
 		self.time=localtime()
 
 		try:
-			self.HKvalues.updateHK()
+			#self.HKvalues.updateHK()
+			if (self.measurements is not None) and ('multimeter' in self.measurements.__dict__):
+				sensors=self.measurements.multimeter.getSensors()
+				self.HKvalues.updateHK(sensors)
 		except:
 			pass
 			#self.dum_dbr=dummy_hardware('dbr')
@@ -183,7 +186,11 @@ class MainWindow(QMainWindow):
 				order=[order[k]+str(order[0:k].count(w)) for k,w in enumerate(order)]
 				if len(self.measurements._housekeeping)>0:
 					chopper_pos=order[len(self.measurements._housekeeping)-1]
-					Tc,Th=21.,295.
+					Tc,Th=self.measurements.multimeter.getSensors()[1:3]
+
+					Tc=62.3
+					Th=121.5
+
 					self.centralwidget.tabs.refreshTabs(Tc,Th,order,chopper_pos)
 			except: pass
 

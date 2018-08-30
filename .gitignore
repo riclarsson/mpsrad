@@ -106,3 +106,7 @@ venv.bak/
 # Docs
 doc/generated
 doc/_build
+
+# Settings
+mpsrad/settings.py
+
