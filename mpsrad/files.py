@@ -24,6 +24,8 @@ dform = '>i16f4092f100f28f28f'
 
 aform = '>i16f16384f128f28f28f'
 
+xform = '>i16f1018f128f28f28f'
+
 
 def formatting(type='e'):
     if type == 'e':
@@ -32,6 +34,8 @@ def formatting(type='e'):
         return dform
     elif type == 'a':
         return aform
+    elif type == 'x':
+        return xform
     else:
         return None
 
@@ -144,6 +148,8 @@ class calibration(_files):
         # Storage variables
         self._data = []
         self._time = []
+        self._noise = []
+        self._signal = []
 
         # Calibration loop
         i = 0  # raw-counter
@@ -200,7 +206,7 @@ class calibration(_files):
                         tc = self._tc
 
             signal = tc + (m-c)*(th-tc)/(h-c)
-            noise = ((th*c-tc*h)/(h-c)).reshape(n, d//n).mean(axis=1)
+            noise = ((th*c-tc*h)/(h-c))
             data[0] = tc
             data[1] = th
 
@@ -209,6 +215,8 @@ class calibration(_files):
                 if not count % sweep_count:
                     count = 1
                     continue
+            self._noise.append(noise)
+            self._signal.append(signal)
             self._data.append(np.append(np.append(np.append(data, signal),
                                                   noise), data_end))
             self._time.append(self._rawtime[i-1])
@@ -522,19 +530,19 @@ class averaging(_files):
 
 class raw(_files):
     """**INFO**"""
-    def __init__(self, format=eform):
+    def __init__(self, formatting):
         """
         Parameters:
             format (str):
                 set the format of the file. Either eform or aform
         """
-        assert format[0] == '>', "Must use big-endian to read and store data"
-        assert format[1] == 'i', "Must use index time-stamp as first variable"
+        assert formatting[0] == '>', "Must use big-endian to read and store data"
+        assert formatting[1] == 'i', "Must use index time-stamp as first variable"
 
-        self._struct = struct.Struct(format)
+        self._struct = struct.Struct(formatting)
         self._size = self._struct.size
         self._data_field = 1
-        self._get_format(format)
+        self._get_format(formatting)
 
     def average_raw(self):
         """Averages a raw field and returns the vector to check for variations.
