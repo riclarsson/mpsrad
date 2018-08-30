@@ -542,7 +542,7 @@ class raw(_files):
         self._struct = struct.Struct(format)
         self._size = self._struct.size
         self._data_field = 1
-        self._get_format(formatting)
+        self._get_format(format)
 
     def average_raw(self):
         """Averages a raw field and returns the vector to check for variations.
