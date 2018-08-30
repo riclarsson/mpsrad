@@ -21,8 +21,8 @@ from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
 from . import dummy_hardware
-from . import settings
-from mpsrad.helper import APCUPS
+#from . import settings
+#from mpsrad.helper import APCUPS
 
 import time
 import datetime
@@ -161,7 +161,7 @@ class measurements:
 		# Sets the file interactions
 		self.raw=[]
 		for i in range(self._spectrometers_count):
-			self.raw.append(files.raw(formatting=raw_formats[i]))
+			self.raw.append(files.raw(format=raw_formats[i]))
 
 #		self.temperature=pt100()
 		if self.measurement_type=='IRAM':
@@ -184,7 +184,7 @@ class measurements:
 		# Counter
 		self._i=0
 		
-		self._ups = APCUPS()
+#		self._ups = APCUPS()
 
 		self._initialized=False
 		
@@ -243,7 +243,7 @@ class measurements:
 				print("Init multimeter")
 				self.multimeter.init()  # Does nothing but confirms connection
 				
-			self._ups.init()
+#			self._ups.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -268,13 +268,8 @@ class measurements:
 				print("NOT CONNECTED TO WOBBLER")
 			
 			if self.measurement_type=='IRAM':
-				try:
-					print("Set frequency")
-					self.set_frequency(self._freq)
-				except:
-					print("ERROR IN SETTING THE FREQUENCY")
-					time.sleep(0.5)
-					print("NOT CONNECTED TO DBR")
+				print("Set frequency")
+				self.set_frequency(self._freq)
 
 			print("Set filename")
 			self.set_filenames()
@@ -322,22 +317,22 @@ class measurements:
 				# print("adding time")
 				self._times.append(int(time.time()))
 				
-				ups_active, ups_power = self._ups.run()
-				UPS_ERROR = 50
-				if ups_active == 1:
-					pass  # UPS is active and all is fine
-				elif ups_active == 0:
-					if ups_power < UPS_ERROR:  # Shutdown at 50% power
-						self.close()
-						time.sleep(3)
-						self._ups.close()
-					else:
-						print('UPS is on Battery.', ups_power,
-						      '% power remaining.  Will shutdown when',
-						      'less than', UPS_ERROR, '% remains')
-						pass  # UPS is inactive but power is still high
-				else:
-					pass  # The trick is, that there is no UPS
+#				ups_active, ups_power = self._ups.run()
+#				UPS_ERROR = 50
+#				if ups_active == 1:
+#					pass  # UPS is active and all is fine
+#				elif ups_active == 0:
+#					if ups_power < UPS_ERROR:  # Shutdown at 50% power
+#						self.close()
+#						time.sleep(3)
+#						self._ups.close()
+#					else:
+#						print('UPS is on Battery.', ups_power,
+#						      '% power remaining.  Will shutdown when',
+#						      'less than', UPS_ERROR, '% remains')
+#						pass  # UPS is inactive but power is still high
+#				else:
+#					pass  # The trick is, that there is no UPS
 
 				# This is where housekeeping data should go...
 #				print("generating housekeeping")

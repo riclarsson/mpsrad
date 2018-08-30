@@ -209,7 +209,8 @@ class calibration(_files):
                         tc = self._tc
 
             signal = tc + (m-c)*(th-tc)/(h-c)
-            noise = ((th*c-tc*h)/(h-c))
+            noise = ((th*c-tc*h)/(h-c)).reshape(n, d//n).mean(axis=1) 
+            noise_array = ((th*c-tc*h)/(h-c))
             data[0] = tc
             data[1] = th
 
@@ -218,7 +219,7 @@ class calibration(_files):
                 if not count % sweep_count:
                     count = 1
                     continue
-            self._noise.append(noise)
+            self._noise.append(noise_array)
             self._signal.append(signal)
             self._data.append(np.append(np.append(np.append(data, signal),
                                                   noise), data_end))
@@ -533,19 +534,19 @@ class averaging(_files):
 
 class raw(_files):
     """**INFO**"""
-    def __init__(self, formatting):
+    def __init__(self, format=eform):
         """
         Parameters:
             format (str):
                 set the format of the file. Either eform or aform
         """
-        assert formatting[0] == '>', "Must use big-endian to read and store data"
-        assert formatting[1] == 'i', "Must use index time-stamp as first variable"
+        assert format[0] == '>', "Must use big-endian to read and store data"
+        assert format[1] == 'i', "Must use index time-stamp as first variable"
 
-        self._struct = struct.Struct(formatting)
+        self._struct = struct.Struct(format)
         self._size = self._struct.size
         self._data_field = 1
-        self._get_format(formatting)
+        self._get_format(format)
 
     def average_raw(self):
         """Averages a raw field and returns the vector to check for variations.

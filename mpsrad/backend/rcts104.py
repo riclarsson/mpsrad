@@ -123,7 +123,6 @@ class rcts104:
 		self._socket.setblocking(1)	# make socket blocking
 		self._socket.sendall(command+b"\n")
 		reply=self._socket.recv(1024)
-		print(self.name, reply)
 		return reply
 
 	def run(self):
