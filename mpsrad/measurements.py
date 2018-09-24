@@ -564,12 +564,16 @@ class measurements:
 		except:
 			pass
 		try:
+			if self.lo._initialized is False:
+				ndevices -= 1
 			self.lo.close()
 			n+=1
 			print('Closed LO connection')
 		except:
 			pass
 		try:
+			if self.dbr._initialized is False:
+				ndevices -= 1
 			self.dbr.close()
 			n+=1
 			print('Closed DBR connection')
