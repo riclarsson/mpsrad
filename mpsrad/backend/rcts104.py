@@ -18,6 +18,7 @@ class rcts104:
 	def __init__(self,
 			name="rcts104",
 			frequency=[[2100-210/2,2100+210/2]],
+			f0=None,
 			host="sofia4",
 			tcp_port=1788,
 			udp_port=None,
@@ -46,6 +47,7 @@ class rcts104:
 		"""
 		self.name=name
 		self.frequency=frequency
+		self.f0=f0
 
 		# Lock-check
 		self._initialized=False
@@ -174,6 +176,15 @@ class rcts104:
 		self._data[int(i)]=np.array([n/cycles for n in x])
 
 		self._sent=False
+
+	def set_housekeeping(self, hk):
+		""" Sets the housekeeping data dictionary.  hk must be dictionary """
+		assert self._initialized, "Can set housekeeping when initialized"
+		
+		hk['Instrument'][self.name] = {}
+		hk['Instrument'][self.name]['Frequency [MHz]'] = self.frequency
+		hk['Instrument'][self.name]['Channels [#]'] = self._channels
+		hk['Instrument'][self.name]['Integration [s]'] = self._runtime
 
 	def save_data(self, basename="/home/dabrowski/data/test/CTS", file=None,
 			binary=True):

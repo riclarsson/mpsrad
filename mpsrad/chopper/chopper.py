@@ -99,6 +99,12 @@ class chopper:
 		greetings=self._ask('G')
 		self._initialized=True
 		return greetings
+	
+	def set_housekeeping(self, hk):
+		""" Sets the housekeeping data dictionary.  hk must be dictionary """
+		assert self._initialized, "Can set housekeeping when initialized"
+		
+		hk['Instrument']['Chopper'] = {"Position": self.get_pos()}
 		
 	def _close_and_restore(self):
 		""" Close the device access"""

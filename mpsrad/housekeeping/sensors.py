@@ -89,6 +89,16 @@ class sensors:
 		"""
 		assert self._initialized, "Cannot run uninitialized machine"
 		return self._get_values()[3]
+	
+	def set_housekeeping(self, hk):
+		""" Sets the housekeeping data dictionary.  hk must be dictionary """
+		assert self._initialized, "Can set housekeeping when initialized"
+		
+		sens = self.get_values()
+		
+		hk['Environment']["Room [K]"] = hk['Environment']["Hot Load [K]"] = self.C2K(sens['Temp0'])
+		hk['Environment']["Outdoors [K]"] = self.C2K(sens['Temp1'])
+		hk['Environment']["Humidity [%]"] = sens['Humidity']
 
 	def _close_and_restore(self):
 		""" Close the device access"""

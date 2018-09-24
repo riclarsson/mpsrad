@@ -11,14 +11,18 @@ Run the measurements once all devices are initialized
 from mpsrad.wobbler import IRAM
 from mpsrad.wobbler import WVR
 from mpsrad.chopper import chopper
+from mpsrad.backend import rcts104
+from mpsrad.backend import pc104
+from mpsrad.backend import acs
+from mpsrad.backend import FW
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.Agilent import Agilent34970A
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
 from . import files
 from . import dummy_hardware
-from . import settings
-from mpsrad.helper import APCUPS
+#from . import settings
+#from mpsrad.helper import APCUPS
 
 import time
 import datetime
@@ -27,30 +31,27 @@ import numpy as np
 
 class measurements:
 	"""Run the measurements once all devices are initialized"""
-	def __init__(self, sweep=settings.sweep, freq=settings.freq, 
-		freq_step=settings.freq_step, if_offset=settings.if_offset,
-		sweep_step=settings.sweep_step, full_file=settings.full_file,
-		repeat=settings.repeat, wait=settings.wait,
-		freq_range=settings.freq_range,
-		wobbler_device=settings.wobbler_device,
-		wobbler_address=settings.wobbler_address,
-		measurement_type=settings.measurement_type,
-		wiltron68169B_address=settings.wiltron68169B_address,
-		chopper_device=settings.chopper_device,
-		antenna_offset=settings.antenna_offset,
-		dbr_port=settings.dbr_port, dbr_server=settings.dbr_server,
-		integration_time=settings.integration_time,
-		blank_time=settings.blank_time,
-		mode=settings.mode, basename=settings.basename,
-		raw_formats=settings.raw_formats,
-		formatnames=settings.formatnames,
-		spectrometer_channels=settings.spectrometer_channels,
-		spectrometers=settings.spectrometers,
-		spectrometer_freqs=settings.spectrometer_freqs,
-		spectrometer_hosts=settings.spectrometer_hosts,
-		spectrometer_names=settings.spectrometer_names,
-		spectrometer_tcp_ports=settings.spectrometer_tcp_ports,
-		spectrometer_udp_ports=settings.spectrometer_udp_ports):
+	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
+		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
+		freq_range=(214, 270),
+		wobbler_device="/dev/ttyS0", wobbler_address=b'0',
+		wiltron68169B_address=5,
+		chopper_device="/dev/chopper", antenna_offset=1000,
+		dbr_port=1080, dbr_server="dbr",
+		integration_time=5000,
+		blank_time=5,
+		measurement_type="IRAM",
+		mode="antenna", basename='../data/',
+		raw_formats=[files.aform, files.eform, files.dform, files.dform, files.xtest2form],
+		formatnames=[ 'a', 'e', 'd', 'd', 'xtest2'],
+		spectrometer_channels=[[8192, 8192], [7504], [4096], [4096], [1023]],
+		spectrometers=[FW, rcts104, rcts104, pc104, acs],
+		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]],
+							[[1330, 1370]], [[1330, 1370]], [[4400,8800]]],
+		spectrometer_hosts=['localhost', 'sofia4', "waspam3", "pc104", None],
+		spectrometer_names=['AFFTS', '210 MHz CTS', "40 MHz CTS RCTS", "40 MHz CTS PC104", 'ACS'],
+		spectrometer_tcp_ports=[25144, 1788, 1788, 1725, None],
+		spectrometer_udp_ports=[16210, None, None, None, None]):
 
 		""" Initialize the machine
 
@@ -183,9 +184,16 @@ class measurements:
 		# Counter
 		self._i=0
 		
-		self._ups = APCUPS()
+#		self._ups = APCUPS()
 
 		self._initialized=False
+		
+		self.housekeeping = {"Instrument": {},
+							"Environment": {"Room [K]": 300.,
+											"Cold Load [K]": 0.12,
+											"Hot Load [K]": 500.,
+											"Outdoors [K]": 2345.,
+											"Humidity [%]": 1234.0}}
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
@@ -207,10 +215,9 @@ class measurements:
 			except: 
 				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
 				self._dum_chop.init()
-
-			print("Init spectrometers")
 			try:
 				for s in self.spec:
+					print("Init spectrometer:", s.name)
 					s.init()  # Can set nothing
 			except:
 				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
@@ -236,7 +243,7 @@ class measurements:
 				print("Init multimeter")
 				self.multimeter.init()  # Does nothing but confirms connection
 				
-			self._ups.init()
+#			self._ups.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -261,13 +268,8 @@ class measurements:
 				print("NOT CONNECTED TO WOBBLER")
 			
 			if self.measurement_type=='IRAM':
-				try:
-					print("Set frequency")
-					self.set_frequency(self._freq)
-				except:
-					print("ERROR IN SETTING THE FREQUENCY")
-					time.sleep(0.5)
-					print("NOT CONNECTED TO DBR")
+				print("Set frequency")
+				self.set_frequency(self._freq)
 
 			print("Set filename")
 			self.set_filenames()
@@ -315,25 +317,26 @@ class measurements:
 				# print("adding time")
 				self._times.append(int(time.time()))
 				
-				ups_active, ups_power = self._ups.run()
-				UPS_ERROR = 50
-				if ups_active == 1:
-					pass  # UPS is active and all is fine
-				elif ups_active == 0:
-					if ups_power < UPS_ERROR:  # Shutdown at 50% power
-						self.close()
-						time.sleep(3)
-						self._ups.close()
-					else:
-						print('UPS is on Battery.', ups_power,
-						      '% power remaining.  Will shutdown when',
-						      'less than', UPS_ERROR, '% remains')
-						pass  # UPS is inactive but power is still high
-				else:
-					pass  # The trick is, that there is no UPS
+#				ups_active, ups_power = self._ups.run()
+#				UPS_ERROR = 50
+#				if ups_active == 1:
+#					pass  # UPS is active and all is fine
+#				elif ups_active == 0:
+#					if ups_power < UPS_ERROR:  # Shutdown at 50% power
+#						self.close()
+#						time.sleep(3)
+#						self._ups.close()
+#					else:
+#						print('UPS is on Battery.', ups_power,
+#						      '% power remaining.  Will shutdown when',
+#						      'less than', UPS_ERROR, '% remains')
+#						pass  # UPS is inactive but power is still high
+#				else:
+#					pass  # The trick is, that there is no UPS
 
 				# This is where housekeeping data should go...
 #				print("generating housekeeping")
+
 				if self.measurement_type=='IRAM':
 					try:
 						debug_msg='housekeeping'
@@ -370,6 +373,7 @@ class measurements:
 					self._housekeeping.append(np.zeros((16)))
 					self._housekeeping[-1][1:]=self.multimeter.getSensors()
 
+
 				try:
 					debug_msg='wobbler_move'
 #					print("moving wobbler")
@@ -380,6 +384,7 @@ class measurements:
 				
 				debug_msg='spec_run'
 #					print("telling to gather data")
+
 				for s in self.spec: s.run()
 				
 				debug_msg='get_data'
@@ -419,12 +424,14 @@ class measurements:
 		try:
 			for i in range(4):
 				# Need to take into account multiple spectrometers sometime...
-				try:
-					print('saving spectra '+str(self._i*4+i))
-					for j in range(self._spectrometers_count):
+				print('saving spectra '+str(self._i*4+i))
+				for j in range(self._spectrometers_count):
+					if 'test' in self._formatnames[j]:
+						self.raw[j].append_to_testfile(self._files[j], self._times[i],
+							self._housekeeping[i],self.spec[j]._data[i][2:-2], self.spec[j]._testarray)
+					else:
 						self.raw[j].append_to_file(self._files[j], self._times[i],
 							self._housekeeping[i],self.spec[j]._data[i][2:-2])
-				except: self._dum_spec.save_issue()
 					
 		except KeyboardInterrupt:
 			self.close()

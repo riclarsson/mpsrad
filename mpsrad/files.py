@@ -24,6 +24,9 @@ dform = '>i16f4092f100f28f28f'
 
 aform = '>i16f16384f128f28f28f'
 
+xform = '>i16f1019f128f28f28f'
+
+xtest2form = '>i16f1019f2065i128f28f28f'
 
 def formatting(type='e'):
     if type == 'e':
@@ -32,6 +35,10 @@ def formatting(type='e'):
         return dform
     elif type == 'a':
         return aform
+    elif type == 'x':
+        return xform
+    elif type == 'xtest2':
+        return xtest2form
     else:
         return None
 
@@ -144,6 +151,8 @@ class calibration(_files):
         # Storage variables
         self._data = []
         self._time = []
+        self._noise = []
+        self._signal = []
 
         # Calibration loop
         i = 0  # raw-counter
@@ -200,7 +209,8 @@ class calibration(_files):
                         tc = self._tc
 
             signal = tc + (m-c)*(th-tc)/(h-c)
-            noise = ((th*c-tc*h)/(h-c)).reshape(n, d//n).mean(axis=1)
+            noise = ((th*c-tc*h)/(h-c)).reshape(n, d//n).mean(axis=1) 
+            noise_array = ((th*c-tc*h)/(h-c))
             data[0] = tc
             data[1] = th
 
@@ -209,6 +219,8 @@ class calibration(_files):
                 if not count % sweep_count:
                     count = 1
                     continue
+            self._noise.append(noise_array)
+            self._signal.append(signal)
             self._data.append(np.append(np.append(np.append(data, signal),
                                                   noise), data_end))
             self._time.append(self._rawtime[i-1])
@@ -610,6 +622,45 @@ class raw(_files):
 
         # print("appending data")
         p += struct.pack('>'+str(self._format[1])+'f', *data)
+
+        # print("appending noise")
+        s = self._format[-3]
+        p += struct.pack('>'+str(s)+'f', *np.zeros((s)))
+
+        # print("appending filters")
+        s = self._format[-1]+self._format[-2]
+        p += struct.pack('>'+str(s)+'f', *np.zeros((s)))
+
+        if os.path.exists(filename):
+            a = open(filename, 'ab')
+        else:
+            a = open(filename, 'wb')
+        a.write(p)
+        a.close()
+
+    def append_to_testfile(self, filename, time, housekeeping, data, test):
+        """
+        Parameters:
+            filename (str):
+                Name of the file where to save
+            time (num):
+                **INFO**
+            housekeeping (**INFO**):
+                **INFO**
+            data (**INFO**):
+                **INFO**
+        """
+        # print("appending time")
+        p = struct.pack('>I', time)
+
+        # print("appending housekeeping")
+        p += struct.pack('>'+str(self._format[0])+'f', *housekeeping)
+
+        # print("appending data")
+        p += struct.pack('>'+str(self._format[1])+'f', *data)
+
+        # print("appending test")
+        p += struct.pack('>'+str(self._format[2])+'i', *test)
 
         # print("appending noise")
         s = self._format[-3]
