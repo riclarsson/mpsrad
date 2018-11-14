@@ -28,6 +28,9 @@ xform = '>i16f1019f128f28f28f'
 
 xtest2form = '>i16f1019f2065i128f28f28f'
 
+sform = '>i16f10000f'
+
+
 def formatting(type='e'):
     if type == 'e':
         return eform
@@ -39,6 +42,8 @@ def formatting(type='e'):
         return xform
     elif type == 'xtest2':
         return xtest2form
+    elif type == 's':
+        return sform
     else:
         return None
 
@@ -209,8 +214,8 @@ class calibration(_files):
                         tc = self._tc
 
             signal = tc + (m-c)*(th-tc)/(h-c)
-            noise = ((th*c-tc*h)/(h-c)).reshape(n, d//n).mean(axis=1) 
             noise_array = ((th*c-tc*h)/(h-c))
+            noise = noise_array.reshape(n, d//n).mean(axis=1) 
             data[0] = tc
             data[1] = th
 
@@ -669,6 +674,34 @@ class raw(_files):
         # print("appending filters")
         s = self._format[-1]+self._format[-2]
         p += struct.pack('>'+str(s)+'f', *np.zeros((s)))
+
+        if os.path.exists(filename):
+            a = open(filename, 'ab')
+        else:
+            a = open(filename, 'wb')
+        a.write(p)
+        a.close()
+
+    def append_to_swictsfile(self, filename, time, housekeeping, data):
+        """
+        Parameters:
+            filename (str):
+                Name of the file where to save
+            time (num):
+                **INFO**
+            housekeeping (**INFO**):
+                **INFO**
+            data (**INFO**):
+                **INFO**
+        """
+        # print("appending time")
+        p = struct.pack('>I', time)
+
+        # print("appending housekeeping")
+        p += struct.pack('>'+str(self._format[0])+'f', *housekeeping)
+
+        # print("appending data")
+        p += struct.pack('>'+str(self._format[1])+'f', *data)
 
         if os.path.exists(filename):
             a = open(filename, 'ab')

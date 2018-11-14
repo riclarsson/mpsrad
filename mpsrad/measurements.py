@@ -15,6 +15,7 @@ from mpsrad.backend import rcts104
 from mpsrad.backend import pc104
 from mpsrad.backend import acs
 from mpsrad.backend import FW
+from mpsrad.backend import swicts
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.Agilent import Agilent34970A
 from mpsrad.housekeeping.sensors import sensors
@@ -42,16 +43,17 @@ class measurements:
 		blank_time=5,
 		measurement_type="IRAM",
 		mode="antenna", basename='../data/',
-		raw_formats=[files.aform, files.eform, files.dform, files.dform, files.xtest2form],
-		formatnames=[ 'a', 'e', 'd', 'd', 'xtest2'],
-		spectrometer_channels=[[8192, 8192], [7504], [4096], [4096], [1023]],
-		spectrometers=[FW, rcts104, rcts104, pc104, acs],
-		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]],
-							[[1330, 1370]], [[1330, 1370]], [[4400,8800]]],
-		spectrometer_hosts=['localhost', 'sofia4', "waspam3", "pc104", None],
-		spectrometer_names=['AFFTS', '210 MHz CTS', "40 MHz CTS RCTS", "40 MHz CTS PC104", 'ACS'],
-		spectrometer_tcp_ports=[25144, 1788, 1788, 1725, None],
-		spectrometer_udp_ports=[16210, None, None, None, None]):
+		raw_formats=[files.aform, files.eform], #, files.xtest2form, files.sform],
+		formatnames=[ 'a', 'e'], #, 'xtest2', 's']
+		spectrometer_channels=[[8192, 8192], [7504]], # [1023]],#, [10000]],
+		spectrometers=[FW, rcts104], #, acs,swicts],
+		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]]],
+#							] [[4400,8800]], [[5500,6500]]],
+		spectrometer_hosts=['localhost', 'sofia4'], #, None, '134.76.235.26'],
+		spectrometer_names=['AFFTS', '210 MHz CTS'], # 'ACS','SWI CTS'],
+		spectrometer_tcp_ports=[25144, 1788], # #1725,
+#						   None, 9900],
+		spectrometer_udp_ports=[16210, None]): #, None, None]):
 
 		""" Initialize the machine
 
@@ -383,17 +385,17 @@ class measurements:
 					self._dum_wob.run_issue(3,'MOVE')
 				
 				debug_msg='spec_run'
-#					print("telling to gather data")
+#				print("telling to gather data")
 
 				for s in self.spec: s.run()
 				
 				debug_msg='get_data'
-#					print("downloading data")
-				for s in self.spec: s.get_data(i)
+				for s in self.spec:
+#					print(s.name)
+					s.get_data(i)
 
 				try:
 					debug_msg='wobbler_wait'
-#					print("waiting for wobbler")
 					self.wob.wait()
 				except: 
 					self._dum_wob.run_issue(3,'WAIT')
@@ -426,9 +428,12 @@ class measurements:
 				# Need to take into account multiple spectrometers sometime...
 				print('saving spectra '+str(self._i*4+i))
 				for j in range(self._spectrometers_count):
-					if 'test' in self._formatnames[j]:
+					if self._formatnames[j]=='s':
+						self.raw[j].append_to_swictsfile(self._files[j], self._times[i],
+							self._housekeeping[i],self.spec[j]._data[i])
+					elif 'test' in self._formatnames[j]:
 						self.raw[j].append_to_testfile(self._files[j], self._times[i],
-							self._housekeeping[i],self.spec[j]._data[i][2:-2], self.spec[j]._testarray)
+							self._housekeeping[i],self.spec[j]._data[i][2:-2], self.spec[j]._testarray[i])
 					else:
 						self.raw[j].append_to_file(self._files[j], self._times[i],
 							self._housekeeping[i],self.spec[j]._data[i][2:-2])

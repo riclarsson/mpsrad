@@ -16,12 +16,13 @@ from guidata.qt.QtCore import Qt,QSize,QTimer
 from time import localtime
 
 from mpsrad.gui.myIcons import myIcons
+from mpsrad.gui.RetrievalTabs import oemWidget
 from mpsrad.gui.SpectrometerTabs import SpectrometerTabs
 from mpsrad.gui.HK_control_IRAM import HKwidget,Controlwidget
 from mpsrad.gui.myBars import StatusBar,ToolBar
 
 from mpsrad.measurements import measurements
-from mpsrad.measureThread import measure
+from mpsrad.measureThread import measure, measure2
 
 from mpsrad.dummy_hardware import dummy_hardware
 # =============================================================================
@@ -87,6 +88,7 @@ class MainWindow(QMainWindow):
 		self.measurements=None
 
 		self.centralwidget=CentralWidget(self)
+		self.oem = oemWidget(self.centralwidget.tabs, [142.158, 142.192])
 		self.setCentralWidget(self.centralwidget)
 
 		self.HKvalues=self.centralwidget.HKvalues
@@ -95,7 +97,11 @@ class MainWindow(QMainWindow):
 
 		self.init=False
 		self.running=False
+		
+		self.oeminit=False
+		self.oemrunning=False
 
+		self.oemThread=measure2(self.oem)
 		self.measureThread=measure(self)
 
 		self.timer=QTimer()
@@ -106,10 +112,14 @@ class MainWindow(QMainWindow):
 
 		self.closeEvent=self.closeApp
 
+		self._Tc=0
+		self._Th=0
+
 	def closeApp(self,*arg):
 		self.sBar.close()
 		self.timer.stop()
 		self.measureThread.close()
+		self.oemThread.close()
 		self.HKvalues.close()
 
 	# configure measurement object
@@ -143,6 +153,11 @@ class MainWindow(QMainWindow):
 
 		self.sender().setChecked(self.init)
 		self.Controlvalues.setDisabled(self.init)
+#
+		if self.oemrunning: self.oeminit=True
+		else: self.oeminit=not self.oeminit
+		if not self.oemrunning and self.oeminit: self.oemThread.do('init')
+		else: self.oemThread.do('close')
 
 	# start/stop measurement
 	def measureStartStop(self):
@@ -153,6 +168,11 @@ class MainWindow(QMainWindow):
 		else: self.measureThread.do(None)
 
 		self.sender().setChecked(self.running)
+
+		if self.oeminit: self.oemrunning=not self.oemrunning
+		else: self.oemrunning=False
+		if self.oemrunning: self.oemThread.do('run')
+		else: self.oemThread.do(None)
 		
 	# timer callback function
 	def updateTimer(self):
@@ -184,7 +204,16 @@ class MainWindow(QMainWindow):
 				if len(self.measurements._housekeeping)>0:
 					chopper_pos=order[len(self.measurements._housekeeping)-1]
 #					Tc,Th=self.measurements.multimeter.getSensors()[1:3]
-					Tc,Th=21.,295.
+					
+					Tc=self.measurements._housekeeping[-1][0]
+					Th=self.measurements._housekeeping[-1][1]
+					if Tc!=0: self._Tc=Tc
+					if Th!=0: self._Th=Th
+
+					Tc = self._Tc
+					Th = self._Th
+#					print(Tc,Th)
+#					Tc,Th=21.,295.
 #					Tc=62.3
 #					Th=121.5
 
@@ -206,6 +235,7 @@ def begin():
 	app=qapplication()
 	global window
 	window=MainWindow()
+	window.showMaximized()
 	print('ok')
 	return(app,window)
 #
@@ -219,4 +249,5 @@ if __name__=='__main__':
 	app=qapplication()
 	window=MainWindow()
 	window.show()
+	window.showMaximized()
 	app.exec_()
