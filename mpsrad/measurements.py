@@ -12,8 +12,8 @@ from mpsrad.wobbler import IRAM
 from mpsrad.wobbler import WVR
 from mpsrad.chopper import chopper
 from mpsrad.backend import rcts104
-from mpsrad.backend import pc104
-from mpsrad.backend import acs
+#from mpsrad.backend import pc104
+#from mpsrad.backend import acs
 from mpsrad.backend import FW
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.Agilent import Agilent34970A
@@ -34,24 +34,23 @@ class measurements:
 	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
 		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
 		freq_range=(214, 270),
-		wobbler_device="/dev/ttyS0", wobbler_address=b'0',
+		wobbler_device="/dev/ttyUSB1", wobbler_address=b'0',
 		wiltron68169B_address=5,
-		chopper_device="/dev/chopper", antenna_offset=1000,
+		chopper_device="/dev/ttyUSB0", antenna_offset=1000,
 		dbr_port=1080, dbr_server="dbr",
 		integration_time=5000,
 		blank_time=5,
 		measurement_type="IRAM",
 		mode="antenna", basename='../data/',
-		raw_formats=[files.aform, files.eform, files.dform, files.dform, files.xtest2form],
-		formatnames=[ 'a', 'e', 'd', 'd', 'xtest2'],
-		spectrometer_channels=[[8192, 8192], [7504], [4096], [4096], [1023]],
-		spectrometers=[FW, rcts104, rcts104, pc104, acs],
-		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]],
-							[[1330, 1370]], [[1330, 1370]], [[4400,8800]]],
-		spectrometer_hosts=['localhost', 'sofia4', "waspam3", "pc104", None],
-		spectrometer_names=['AFFTS', '210 MHz CTS', "40 MHz CTS RCTS", "40 MHz CTS PC104", 'ACS'],
-		spectrometer_tcp_ports=[25144, 1788, 1788, 1725, None],
-		spectrometer_udp_ports=[16210, None, None, None, None]):
+		raw_formats=[files.dform, files.dform],
+		formatnames=['d', 'd'],
+		spectrometer_channels=[[4096], [4096]],
+		spectrometers=[rcts104, rcts104],
+		spectrometer_freqs=[[[1330, 1370]], [[1330, 1370]]],
+		spectrometer_hosts=["waspam6", "waspam7"],
+		spectrometer_names=["40 MHz CTS V", "40 MHz CTS H",],
+		spectrometer_tcp_ports=[1788, 1788],
+		spectrometer_udp_ports=[None, None]):
 
 		""" Initialize the machine
 

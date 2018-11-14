@@ -17,7 +17,7 @@ from time import localtime
 
 from mpsrad.gui.myIcons import myIcons
 from mpsrad.gui.SpectrometerTabs import SpectrometerTabs
-from mpsrad.gui.HK_control_IRAM import HKwidget,Controlwidget
+from mpsrad.gui.HK_control_WVR import HKwidget,Controlwidget
 from mpsrad.gui.myBars import StatusBar,ToolBar
 
 from mpsrad.measurements import measurements
@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
 #			spectrometer_channels=[[8192,8192]],
 #			formatnames=c.Format,raw_formats=[form[f] for f in c.Format],
 			basename=c.Directory+('' if c.Directory[-1] is '/' else '/'),
-			sweep=c.Sweep,
+#			sweep=c.Sweep,
 			full_file=c.NSpec,
 			freq=c.Frequency,
 			integration_time=int(c.IntegrationTime*1000.),
@@ -163,8 +163,9 @@ class MainWindow(QMainWindow):
 		if (self.measurements is not None) and ('multimeter' in self.measurements.__dict__):
 			sensors=self.measurements.multimeter.getSensors()
 			self.HKvalues.updateHK(sensors)
-		else:
-			self.HKvalues.updateHK()
+		elif self.measurements is not None:
+			sensors=self.measurements.multimeter.getSensors()
+			self.HKvalues.updateHK(sensors)
 
 		if self.init: self.sBar.setInfo("Initialized","preview")
 		else: self.sBar.setInfo("Stopped","stop1")

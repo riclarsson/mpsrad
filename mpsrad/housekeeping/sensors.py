@@ -62,7 +62,7 @@ class sensors:
 			return greetings
 		except :
 			print('Dummy sensors...')
-			self._dummy_sensors=dummy_housekeeping.dummy_sensors()
+#			self._dummy_sensors=dummy_housekeeping.dummy_sensors()
 
 	def get_values(self):
 		"""Function to obtain values from the sensor
