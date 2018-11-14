@@ -1,15 +1,12 @@
 # The following code has been adapted from https://github.com/simonpf/typhon_examples/
-
-import struct
+#
 import numpy as np
-import seaborn
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from scipy import signal as sg
-from typhon.arts.workspace import Workspace, arts_agenda
 import typhon
+from typhon.arts.workspace import Workspace, arts_agenda
 from scipy.optimize import leastsq
-from files import calibration
+from mpsrad.files import calibration
 
 
 class oem_retrieval():
@@ -236,6 +233,7 @@ class oem_retrieval():
                 #print(np.size(Signal_0), np.size(Fit))
                 self.fit_signal[i] = Signal_0-Fit
                 self.fit_noise[i]  = Noise_0-Fit
+                
 
             if plot_example:
                 # Plot the last "noise" value along with the fit sine curve
@@ -269,7 +267,11 @@ class oem_retrieval():
                 self.fit_signal[i] = self.signal[i][front_lim:back_lim]
                 self.fit_noise[i]  = self.noise[i][front_lim:back_lim]
 
+<<<<<<< HEAD
+    def mean_retrieval(self,use_data=0,filtered=False,shift_freq=False,sigma=None):
+=======
     def mean_retrieval(self,filtered=False,plot_results=False,plot_statistics=False):
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         """
         AUTHOR:
           Hayden Smotherman
@@ -280,9 +282,8 @@ class oem_retrieval():
         INPUTS:
           filtered - Boolean that determines whether or not to use the scipy.signal.filtfilt
                      function on the mean signal value in order to potentially improve the signal
-          plot_results - Boolean that determines whether or not to plot the results of the retrieval.
-          plot_statistics - Boolean that determines whether or not to plot relevant statistics
-                            from the retrieval.
+          shift_freq - Boolean that determines whether or not to shift the frequency such that the
+                       max of the averaged data aligns with the peak of the O3 signal.
         OUTPUTS:
           NONE
         """
@@ -293,49 +294,122 @@ class oem_retrieval():
         else:
             self.average_signal = np.copy(self.fit_signal)
             self.average_noise  = np.copy(self.fit_noise)
+<<<<<<< HEAD
+                            
+=======
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
 
         if filtered:
-            n = 7  # the larger n is, the smoother the curve will be
+            n = 4  # the larger n is, the smoother the curve will be
             b = [1.0 / n] * n
             a = 1
 
             self.average_signal = sg.filtfilt(b,a,self.average_signal)
             self.average_noise  = sg.filtfilt(b,a,self.average_noise)
 
+        if shift_freq:
+            Freq_Peak = self.fit_freq[self.average_signal==np.max(self.average_signal)]
+            Freq_Difference = Freq_Peak-1.42175037e+2
+            self.fit_freq -= Freq_Difference
+
         self._initialize_arts_workspace()
 
+<<<<<<< HEAD
+        if sigma is None:
+            self.sigma = np.sqrt(np.sum(np.abs(self.average_noise-np.mean(self.average_noise)))/len(self.average_noise))
+        else:
+            self.sigma = sigma
+        
+=======
         self.sigma = np.sqrt(np.sum(np.abs(self.average_noise-np.mean(self.average_noise)))/len(self.average_noise))
 
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         self._initialize_covmat()
 
         self._run_retrieval()
+<<<<<<< HEAD
+        
+    def plot_oem(self,basename='',plot_results=True,plot_statistics=True):
+        """
+        AUTHOR:
+          Hayden Smotherman
+        DESCRIPTION:
+          This function uses the Typhon OEM retrieval package to recover atmospheric O3 levels
+          given the brightness temperature signal of the O3-666 line. If self.signal is a 2D
+          matrix, then this function will run the retrieval on the mean of this data.
+        INPUTS:
+          plot_results - Boolean that determines whether or not to plot the results of the retrieval.
+          plot_statistics - Boolean that determines whether or not to plot relevant statistics
+                            from the retrieval.
+        OUTPUTS:
+          NONE
+        """
+=======
 
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         if plot_results:
         # Plot the retrieved signal and the retrieval values
             # First plot the averaged signal and the retrieved signal
-            plt.figure(figsize=[12,8])
+            plt.figure(1, figsize=[12,8])
+            plt.clf()
             plt.plot(self.fit_freq,self.average_signal)
             plt.plot(self.arts.f_grid.value/1e9,self.arts.yf.value,'r')
             plt.xlabel('Frequency [GHz]',fontsize=20)
             plt.ylabel('Brightness Temperature [K]',fontsize=20)
             plt.legend(['Data', 'Retrieval'],fontsize=20)
             plt.title('Average Signal and Retrieved Signal',fontsize=24)
+<<<<<<< HEAD
+            plt.savefig(basename+'fig1.png')
+            
+=======
 
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
             # Now plot the actual retrieved Ozone VMR
             Altitude = self.arts.z_field.value.flatten()
-            plt.figure(figsize=[8,12])
-            plt.plot(10**self.arts.xa.value[:-1],Altitude)
-            plt.plot(10**self.arts.x.value[:-1],Altitude)
+            plt.figure(2, figsize=[8,12])
+            plt.clf()
+            plt.plot(10**self.arts.xa.value[:-1]*1e6,Altitude)
+            plt.plot(10**self.arts.x.value[:-1]*1e6,Altitude)
             plt.legend(['Prior','OEM Retrieval'],fontsize=20)
             plt.ylabel('Altitude [m]',fontsize=20)
-            plt.xlabel('O3',fontsize=20)
+            plt.xlabel('O3 [ppmv]',fontsize=20)
             plt.title('Altitude vs. O3 VMR',fontsize=24)
+<<<<<<< HEAD
+            plt.savefig(basename+'fig2.png')
 
+            plt.figure(1, figsize=[12,8])
+            plt.clf()
+            plt.plot(self.fit_freq,self.average_signal-self.arts.yf.value,'r')
+            plt.xlabel('Frequency [GHz]',fontsize=20)
+            plt.ylabel('Residual [K]',fontsize=20)
+            plt.title('Residual Signal',fontsize=24)
+            plt.savefig(basename+'fig5.png')
+            
+=======
+
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         if plot_statistics:
         # Plot some relevant statistics of the OEM retrieval
             Altitude = self.arts.z_field.value.flatten()
-            averaging_kernel = (self.arts.dxdy.value @ self.arts.jacobian.value).T
+            averaging_kernel = self.arts.dxdy.value @ self.arts.jacobian.value
             measurement_response = averaging_kernel @ np.ones(averaging_kernel.shape[1])
+<<<<<<< HEAD
+            
+            plt.figure(3, figsize=[12,8])
+            plt.clf()
+            [plt.plot(kernel[:-1],Altitude) for kernel in averaging_kernel.T]
+            plt.title('Averaging kernel for the OEM retrieval',fontsize=24)
+            plt.ylabel('Altitude [m]',fontsize=20)
+            plt.savefig(basename+'fig3.png')
+            
+            plt.figure(4, figsize=[12,8])
+            plt.clf()
+            plt.plot(measurement_response[:-1],Altitude)
+            plt.title('Measurement response for the OEM retrieval',fontsize=24)
+            plt.ylabel('Alititude [m]',fontsize=20)
+            plt.savefig(basename+'fig4.png')
+            
+=======
 
             plt.figure(figsize=[12,8])
             [plt.plot(kernel[:-1],Altitude) for kernel in averaging_kernel]
@@ -347,6 +421,7 @@ class oem_retrieval():
             plt.title('Measurement response for the OEM retrieval',fontsize=24)
             plt.ylabel('Alititude [m]',fontsize=20)
 
+>>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
     def _initialize_arts_workspace(self):
         """
         AUTHOR:
@@ -365,6 +440,8 @@ class oem_retrieval():
 
         @author: larsson
         """
+
+        xmls = typhon.environ.get('ARTS_DATA_PATH')
 
         self.arts = Workspace(0)
 
@@ -452,7 +529,7 @@ class oem_retrieval():
         self.arts.abs_cont_descriptionAppend(tagname="N2-CIAfunCKDMT252", model="CKDMT252" )
         self.arts.abs_speciesSet(species=['O3-666', 'O2-PWR98', 'H2O-PWR98',
                                      'N2-CIAfunCKDMT252, N2-CIArotCKDMT252'])
-        self.arts.abs_linesReadFromSplitArtscat(basename='lines/', fmin=142e9, fmax=143e9)
+        self.arts.abs_linesReadFromSplitArtscat(basename=xmls+'spectroscopy/Perrin/', fmin=142e9, fmax=143e9)
         self.arts.abs_lines_per_speciesCreateFromLines()
 
         # Set builtin Earth-viable isotopologue values and partition functions
@@ -473,7 +550,7 @@ class oem_retrieval():
         self.arts.iy_unit = "PlanckBT"  # Output results in Planck Brightess Temperature
 
         #  Set the size of the problem (change to your own numbers)
-        NP = 51 # Number of pressure levels
+        NP = 201 # Number of pressure levels
         NF = len(self.fit_freq)
         self.arts.lon_grid = np.array([])
         self.arts.lat_grid = np.array([])
@@ -488,7 +565,7 @@ class oem_retrieval():
         # "t.xml"
         # "z.xml"
         # The files can be in binary format
-        self.arts.AtmRawRead(basename='atm/')
+        self.arts.AtmRawRead(basename=xmls+'planets/Earth/Fascod/subarctic-summer/subarctic-summer')
         self.arts.AtmFieldsCalc()
 
         # Set observation geometry... You can make more positions and los
