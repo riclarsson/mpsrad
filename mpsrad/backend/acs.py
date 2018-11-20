@@ -5,11 +5,15 @@ ACS control
 Last modification: 21.08.2018
 Author: Borys Dabrowski, dabrowski@mps.mpg.de
 """
-from . import cheetah_py as spi
 import datetime
 import numpy as np
 from time import time,sleep
 from .qc_kk import qc_kk
+
+try:
+	from . import cheetah_py as spi
+except:
+	print("Warning: download cheetah.so manually or don't use ACS as spectrometer")
 
 class acs:
 	""" Interactions with ACS functionality

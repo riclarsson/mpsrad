@@ -81,9 +81,9 @@ class MainWindow(QMainWindow):
 		icons=myIcons()
 		self.getIcon=icons.getIcon
 
-		self.setWindowTitle('IRAM GUI')
+		self.setWindowTitle('WVR GUI')
 		self.resize(QSize(1200,800))
-		self.setWindowIcon(self.getIcon('Jupiter'))
+		self.setWindowIcon(self.getIcon('spectrum'))
 
 		self.measurements=None
 
@@ -210,13 +210,12 @@ class MainWindow(QMainWindow):
 					Th=self.measurements._housekeeping[-1][1]
 					if Tc!=0: self._Tc=Tc
 					if Th!=0: self._Th=Th
-
 					Tc = self._Tc
 					Th = self._Th
 #					print(Tc,Th)
 #					Tc,Th=21.,295.
-#					Tc=62.3
-#					Th=121.5
+					Tc=62.3
+					Th=121.5
 
 					self.centralwidget.tabs.refreshTabs(Tc,Th,order,chopper_pos)
 			except: pass

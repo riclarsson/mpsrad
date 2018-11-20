@@ -8,8 +8,7 @@ Author: Richard Larsson
 Run the measurements once all devices are initialized
 """
 
-from mpsrad.wobbler import IRAM
-from mpsrad.wobbler import WVR
+from mpsrad.wobbler import IRAM, WVR
 from mpsrad.chopper import chopper
 from mpsrad.backend import rcts104
 #from mpsrad.backend import pc104
@@ -35,37 +34,23 @@ class measurements:
 	def __init__(self, sweep=False, freq=214, freq_step=0.2, if_offset=6,
 		sweep_step=10, full_file=10*56*5*4, repeat=True, wait=1,
 		freq_range=(214, 270),
-		wobbler_device="/dev/ttyUSB1", wobbler_address=b'0',
+		chopper_device="/dev/ttyUSB1", wobbler_address=b'0',
 		wiltron68169B_address=5,
-		chopper_device="/dev/ttyUSB0", antenna_offset=1000,
+		wobbler_device="/dev/ttyUSB0", antenna_offset=1000,
 		dbr_port=1080, dbr_server="dbr",
 		integration_time=5000,
 		blank_time=5,
-		measurement_type="IRAM",
+		measurement_type="WVR",
 		mode="antenna", basename='../data/',
-<<<<<<< HEAD
 		raw_formats=[files.dform, files.dform],
 		formatnames=['d', 'd'],
 		spectrometer_channels=[[4096], [4096]],
 		spectrometers=[rcts104, rcts104],
 		spectrometer_freqs=[[[1330, 1370]], [[1330, 1370]]],
-		spectrometer_hosts=["waspam6", "waspam7"],
+		spectrometer_hosts=["waspam6", "waspam4"],
 		spectrometer_names=["40 MHz CTS V", "40 MHz CTS H",],
 		spectrometer_tcp_ports=[1788, 1788],
 		spectrometer_udp_ports=[None, None]):
-=======
-		raw_formats=[files.aform, files.eform], #, files.xtest2form, files.sform],
-		formatnames=[ 'a', 'e'], #, 'xtest2', 's']
-		spectrometer_channels=[[8192, 8192], [7504]], # [1023]],#, [10000]],
-		spectrometers=[FW, rcts104], #, acs,swicts],
-		spectrometer_freqs=[[[0, 1500],[0,1500]], [[2100-105, 2100+105]]],
-#							] [[4400,8800]], [[5500,6500]]],
-		spectrometer_hosts=['localhost', 'sofia4'], #, None, '134.76.235.26'],
-		spectrometer_names=['AFFTS', '210 MHz CTS'], # 'ACS','SWI CTS'],
-		spectrometer_tcp_ports=[25144, 1788], # #1725,
-#						   None, 9900],
-		spectrometer_udp_ports=[16210, None]): #, None, None]):
->>>>>>> 7ae6bf918f8a81d8b0c1fb197a595a89eada0af0
 
 		""" Initialize the machine
 
@@ -203,11 +188,11 @@ class measurements:
 		self._initialized=False
 		
 		self.housekeeping = {"Instrument": {},
-							"Environment": {"Room [K]": 300.,
-											"Cold Load [K]": 0.12,
-											"Hot Load [K]": 500.,
-											"Outdoors [K]": 2345.,
-											"Humidity [%]": 1234.0}}
+				"Environment": {"Room [K]": 3000.,
+						"Cold Load [K]": 0.12,
+						"Hot Load [K]": 500.,
+						"Outdoors [K]": 2345.,
+						"Humidity [%]": 1234.0}}
 
 	def init(self, wobbler_position=4000):
 		"""Tries to initiate all devices.  Close all if any error
@@ -218,24 +203,6 @@ class measurements:
 		"""
 		assert not self._initialized, "Cannot reinitialize measurement series"
 		try:
-			print("Init wobbler")
-			try: self.wob.init(wobbler_position)  # Must set start position
-			except: 
-				self._dum_wob=dummy_hardware.dummy_hardware('WOBBLER')
-				self._dum_wob.init()
-
-			print("Init chopper")
-			try: self.chop.init()  # Can set nothing
-			except: 
-				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
-				self._dum_chop.init()
-			try:
-				for s in self.spec:
-					print("Init spectrometer:", s.name)
-					s.init()  # Can set nothing
-			except:
-				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
-				self._dum_spec.init()
 
 			if self.measurement_type=='IRAM':
 				print("Init LO")
@@ -256,6 +223,22 @@ class measurements:
 			else:
 				print("Init multimeter")
 				self.multimeter.init()  # Does nothing but confirms connection
+
+			print("Init wobbler")
+			self.wob.init(wobbler_position)  # Must set start position
+
+			print("Init chopper")
+			try: self.chop.init()  # Can set nothing
+			except: 
+				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
+				self._dum_chop.init()
+			try:
+				for s in self.spec:
+					print("Init spectrometer:", s.name)
+					s.init()  # Can set nothing
+			except:
+				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
+				self._dum_spec.init()
 				
 #			self._ups.init()
 

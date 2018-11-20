@@ -267,11 +267,7 @@ class oem_retrieval():
                 self.fit_signal[i] = self.signal[i][front_lim:back_lim]
                 self.fit_noise[i]  = self.noise[i][front_lim:back_lim]
 
-<<<<<<< HEAD
     def mean_retrieval(self,use_data=0,filtered=False,shift_freq=False,sigma=None):
-=======
-    def mean_retrieval(self,filtered=False,plot_results=False,plot_statistics=False):
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         """
         AUTHOR:
           Hayden Smotherman
@@ -294,10 +290,6 @@ class oem_retrieval():
         else:
             self.average_signal = np.copy(self.fit_signal)
             self.average_noise  = np.copy(self.fit_noise)
-<<<<<<< HEAD
-                            
-=======
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
 
         if filtered:
             n = 4  # the larger n is, the smoother the curve will be
@@ -314,20 +306,14 @@ class oem_retrieval():
 
         self._initialize_arts_workspace()
 
-<<<<<<< HEAD
         if sigma is None:
             self.sigma = np.sqrt(np.sum(np.abs(self.average_noise-np.mean(self.average_noise)))/len(self.average_noise))
         else:
             self.sigma = sigma
-        
-=======
-        self.sigma = np.sqrt(np.sum(np.abs(self.average_noise-np.mean(self.average_noise)))/len(self.average_noise))
 
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         self._initialize_covmat()
 
         self._run_retrieval()
-<<<<<<< HEAD
         
     def plot_oem(self,basename='',plot_results=True,plot_statistics=True):
         """
@@ -344,9 +330,7 @@ class oem_retrieval():
         OUTPUTS:
           NONE
         """
-=======
 
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         if plot_results:
         # Plot the retrieved signal and the retrieval values
             # First plot the averaged signal and the retrieved signal
@@ -358,12 +342,8 @@ class oem_retrieval():
             plt.ylabel('Brightness Temperature [K]',fontsize=20)
             plt.legend(['Data', 'Retrieval'],fontsize=20)
             plt.title('Average Signal and Retrieved Signal',fontsize=24)
-<<<<<<< HEAD
             plt.savefig(basename+'fig1.png')
             
-=======
-
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
             # Now plot the actual retrieved Ozone VMR
             Altitude = self.arts.z_field.value.flatten()
             plt.figure(2, figsize=[8,12])
@@ -374,7 +354,6 @@ class oem_retrieval():
             plt.ylabel('Altitude [m]',fontsize=20)
             plt.xlabel('O3 [ppmv]',fontsize=20)
             plt.title('Altitude vs. O3 VMR',fontsize=24)
-<<<<<<< HEAD
             plt.savefig(basename+'fig2.png')
 
             plt.figure(1, figsize=[12,8])
@@ -385,15 +364,11 @@ class oem_retrieval():
             plt.title('Residual Signal',fontsize=24)
             plt.savefig(basename+'fig5.png')
             
-=======
-
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
         if plot_statistics:
         # Plot some relevant statistics of the OEM retrieval
             Altitude = self.arts.z_field.value.flatten()
             averaging_kernel = self.arts.dxdy.value @ self.arts.jacobian.value
             measurement_response = averaging_kernel @ np.ones(averaging_kernel.shape[1])
-<<<<<<< HEAD
             
             plt.figure(3, figsize=[12,8])
             plt.clf()
@@ -408,20 +383,7 @@ class oem_retrieval():
             plt.title('Measurement response for the OEM retrieval',fontsize=24)
             plt.ylabel('Alititude [m]',fontsize=20)
             plt.savefig(basename+'fig4.png')
-            
-=======
 
-            plt.figure(figsize=[12,8])
-            [plt.plot(kernel[:-1],Altitude) for kernel in averaging_kernel]
-            plt.title('Averaging kernel for the OEM retrieval',fontsize=24)
-            plt.ylabel('Altitude [m]',fontsize=20)
-
-            plt.figure(figsize=[12,8])
-            plt.plot(measurement_response[:-1],Altitude)
-            plt.title('Measurement response for the OEM retrieval',fontsize=24)
-            plt.ylabel('Alititude [m]',fontsize=20)
-
->>>>>>> c014048d60769d3d35f901de3a7139ec2f1b7f2e
     def _initialize_arts_workspace(self):
         """
         AUTHOR:
@@ -493,18 +455,24 @@ class oem_retrieval():
         def geo_pos_agenda(ws):
             ws.Ignore(ws.ppath)
             ws.VectorSet(ws.geo_pos, np.array([]))
+        @arts_agenda
+        def sensor_response_agenda(ws):
+            ws.AntennaOff()
+            ws.sensorOff()
+            ws.Ignore(ws.f_backend)
 
         # Set some agendas
-        self.arts.surface_rtprop_agenda = surface_rtprop_agenda
-        self.arts.abs_xsec_agenda = abs_xsec_agenda_lines
-        self.arts.ppath_step_agenda = ppath_step_agenda_geometric
-        self.arts.propmat_clearsky_agenda = propmat_clearsky_agenda_zeeman
-        self.arts.iy_main_agenda = iy_main_agenda_emission
-        self.arts.iy_space_agenda = iy_space_agenda_cosmic_background
-        self.arts.ppath_agenda = ppath_agenda_step_by_step
-        self.arts.iy_surface_agenda = iy_surface_agenda
-        self.arts.geo_pos_agenda = geo_pos_agenda
-        self.arts.water_p_eq_agenda = water_psat_agenda
+        self.arts.Copy(self.arts.surface_rtprop_agenda, surface_rtprop_agenda)
+        self.arts.Copy(self.arts.abs_xsec_agenda, abs_xsec_agenda_lines)
+        self.arts.Copy(self.arts.ppath_step_agenda, ppath_step_agenda_geometric)
+        self.arts.Copy(self.arts.propmat_clearsky_agenda, propmat_clearsky_agenda_zeeman)
+        self.arts.Copy(self.arts.iy_main_agenda, iy_main_agenda_emission)
+        self.arts.Copy(self.arts.iy_space_agenda, iy_space_agenda_cosmic_background)
+        self.arts.Copy(self.arts.ppath_agenda, ppath_agenda_step_by_step)
+        self.arts.Copy(self.arts.iy_surface_agenda, iy_surface_agenda)
+        self.arts.Copy(self.arts.geo_pos_agenda, geo_pos_agenda)
+        self.arts.Copy(self.arts.water_p_eq_agenda, water_psat_agenda)
+        self.arts.Copy(self.arts.sensor_response_agenda, sensor_response_agenda)
 
         # Set some quantities that are unused because you do not need them (for now)
         self.arts.Touch(self.arts.surface_props_data)
@@ -527,8 +495,8 @@ class oem_retrieval():
         self.arts.abs_cont_descriptionAppend(tagname="O2-PWR98", model="Rosenkranz" )
         self.arts.abs_cont_descriptionAppend(tagname="N2-CIArotCKDMT252", model="CKDMT252" )
         self.arts.abs_cont_descriptionAppend(tagname="N2-CIAfunCKDMT252", model="CKDMT252" )
-        self.arts.abs_speciesSet(species=['O3-666', 'O2-PWR98', 'H2O-PWR98',
-                                     'N2-CIAfunCKDMT252, N2-CIArotCKDMT252'])
+        self.arts.abs_speciesSet(species=['O2-PWR98', 'H2O-PWR98', 
+                                          'N2-CIAfunCKDMT252, N2-CIArotCKDMT252'])
         self.arts.abs_linesReadFromSplitArtscat(basename=xmls+'spectroscopy/Perrin/', fmin=142e9, fmax=143e9)
         self.arts.abs_lines_per_speciesCreateFromLines()
 
@@ -538,7 +506,6 @@ class oem_retrieval():
 
 
         self.arts.nlteOff()  # LTE
-        self.arts.atmosphere_dim = 1  # 3D atmosphere
         self.arts.stokes_dim = 1  # No polarization
         self.arts.xsec_speedup_switch = 0  # No speedup (experimental feature)
         self.arts.rte_alonglos_v = 0.  # No movement of satellite or rotation of planet
@@ -552,8 +519,9 @@ class oem_retrieval():
         #  Set the size of the problem (change to your own numbers)
         NP = 201 # Number of pressure levels
         NF = len(self.fit_freq)
-        self.arts.lon_grid = np.array([])
-        self.arts.lat_grid = np.array([])
+        self.arts.lon_true = np.array([0])
+        self.arts.lat_true = np.array([0])
+        self.arts.AtmosphereSet1D()
         self.arts.p_grid = np.logspace(5.04, -1.2, NP)
         self.arts.z_surface = np.zeros((1, 1))
         self.arts.t_surface = np.full((1, 1), 295.)
@@ -571,12 +539,12 @@ class oem_retrieval():
         # Set observation geometry... You can make more positions and los
         self.arts.sensor_pos = np.array([[300]])  # [[ALT, LAT, LON]] (Original)
 
-        self.arts.sensor_los = np.array([[45]])  # [[ZENITH, AZIMUTH]]
+        self.arts.sensor_los = np.array([[35]])  # [[ZENITH, AZIMUTH]]
 
         # Temperature and Ozone VMR Jacobian
         self.arts.jacobianInit()
         self.arts.jacobianAddTemperature(g1=self.arts.p_grid.value, g2=np.array([]), g3=np.array([]))
-        self.arts.jacobianAddAbsSpecies(g1=self.arts.p_grid.value, g2=np.array([]), g3=np.array([]), species='O3-666')
+        self.arts.jacobianAddAbsSpecies(g1=self.arts.p_grid.value, g2=np.array([]), g3=np.array([]), species='H2O-PWR98')
         self.arts.jacobianClose()
         self.arts.cloudboxOff()  # No Clouds
 
@@ -613,7 +581,7 @@ class oem_retrieval():
                     sigma_1 = 0.1 * np.ones(n_p), # Relative uncertainty
                     cls_1   = 0.5e3 * np.ones(n_p), # Correlation length [m]
                     fname   = "exp")
-        self.arts.retrievalAddAbsSpecies(species = "O3-666",
+        self.arts.retrievalAddAbsSpecies(species = "H2O-PWR98",
                                   unit    = "vmr",
                                   atmosphere_dim = 1,
                                   g1      = self.arts.p_grid,
@@ -638,7 +606,9 @@ class oem_retrieval():
         @arts_agenda
         def inversion_iterate_agenda(arts):
             arts.Ignore(arts.inversion_iteration_counter)
-            arts.x2artsStandard()
+            arts.x2artsAtmAndSurf()
+            arts.Copy(arts.f_backend, arts.f_grid)
+            arts.x2artsSensor()
             arts.atmfields_checkedCalc(negative_vmr_ok=1) # negative_vmr_ok added to avoid error with negative vmr values
             arts.atmgeom_checkedCalc()
             arts.yCalc()

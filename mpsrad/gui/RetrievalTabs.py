@@ -51,7 +51,7 @@ class oemWidget:
 		self._initialized=True
 
 	def setMeasurement(self):
-		self.f0=142.175
+		self.f0=22.2353368
 
 	def refresh_oem(self, i):
 		assert self._initialized, "Must initialize first"
