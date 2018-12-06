@@ -7,6 +7,7 @@ import typhon
 from typhon.arts.workspace import Workspace, arts_agenda
 from scipy.optimize import leastsq
 from mpsrad.files import calibration
+import os
 
 
 class oem_retrieval():
@@ -134,7 +135,7 @@ class oem_retrieval():
                 raise ImportError('Could not generate frequency array. Unknown file format.')
 
             Calibrated = None
-            
+
         elif data_type == 'numpy':
         # Load in arbitrary data that is already in a numpy array
             self.signal = np.array(signal)
@@ -147,7 +148,9 @@ class oem_retrieval():
         self.fit_noise  = np.copy(self.noise)
 
 
-    def process_data(self,lims=[138,146],shift_freq=False,fit_sine=False,plot_example=True,initial_guess=[3,1/1000,0]):
+    def process_data(self, lims=[21,23], shift_freq=False, fit_sine=False,
+                     plot_example=True, initial_guess=[3, 1/1000, 0],
+                     central_freq=1.42175037e+2):
         """
         AUTHOR:
           Hayden Smotherman
@@ -164,6 +167,8 @@ class oem_retrieval():
                           fit_sine=True
           initial_guess - This is the initial guess for the sine parameters used by lsqfit. Only used
                           if fit_sine=True
+          central_freq  - This is the frequency center of the measurements.  Only used if
+                          shift_freq=True
         OUTPUTS:
           NONE
         NOTES:
@@ -176,12 +181,12 @@ class oem_retrieval():
         # Calculate the index corresponding to the minimum frequency limit
         if shift_freq:
             if len(self.signal.shape) > 1:
-                Average_Signal = np.mean(self.signal,axis=0)
+                Average_Signal = np.mean(self.signal, axis=0)
             else:
                 Average_Signal = np.copy(self.signal)
 
-            Freq_Peak = self.freq[Average_Signal==np.max(Average_Signal)]
-            Freq_Difference = Freq_Peak-1.42175037e+2
+            Freq_Peak = self.freq[Average_Signal == np.max(Average_Signal)]
+            Freq_Difference = Freq_Peak-central_freq
             self.freq -= Freq_Difference
 
         front_lim = np.where(self.freq == np.min(self.freq[self.freq>lims[0]]))
@@ -233,7 +238,7 @@ class oem_retrieval():
                 #print(np.size(Signal_0), np.size(Fit))
                 self.fit_signal[i] = Signal_0-Fit
                 self.fit_noise[i]  = Noise_0-Fit
-                
+
 
             if plot_example:
                 # Plot the last "noise" value along with the fit sine curve
@@ -267,7 +272,8 @@ class oem_retrieval():
                 self.fit_signal[i] = self.signal[i][front_lim:back_lim]
                 self.fit_noise[i]  = self.noise[i][front_lim:back_lim]
 
-    def mean_retrieval(self,use_data=0,filtered=False,shift_freq=False,sigma=None):
+    def mean_retrieval(self,use_data=0,filtered=False,shift_freq=False,sigma=None,
+                       central_freq=1.42175037e+2):
         """
         AUTHOR:
           Hayden Smotherman
@@ -280,6 +286,8 @@ class oem_retrieval():
                      function on the mean signal value in order to potentially improve the signal
           shift_freq - Boolean that determines whether or not to shift the frequency such that the
                        max of the averaged data aligns with the peak of the O3 signal.
+          central_freq  - This is the frequency center of the measurements.  Only used if
+                          shift_freq=True
         OUTPUTS:
           NONE
         """
@@ -301,7 +309,7 @@ class oem_retrieval():
 
         if shift_freq:
             Freq_Peak = self.fit_freq[self.average_signal==np.max(self.average_signal)]
-            Freq_Difference = Freq_Peak-1.42175037e+2
+            Freq_Difference = Freq_Peak-central_freq
             self.fit_freq -= Freq_Difference
 
         self._initialize_arts_workspace()
@@ -314,7 +322,7 @@ class oem_retrieval():
         self._initialize_covmat()
 
         self._run_retrieval()
-        
+
     def plot_oem(self,basename='',plot_results=True,plot_statistics=True):
         """
         AUTHOR:
@@ -343,7 +351,7 @@ class oem_retrieval():
             plt.legend(['Data', 'Retrieval'],fontsize=20)
             plt.title('Average Signal and Retrieved Signal',fontsize=24)
             plt.savefig(basename+'fig1.png')
-            
+
             # Now plot the actual retrieved Ozone VMR
             Altitude = self.arts.z_field.value.flatten()
             plt.figure(2, figsize=[8,12])
@@ -363,20 +371,20 @@ class oem_retrieval():
             plt.ylabel('Residual [K]',fontsize=20)
             plt.title('Residual Signal',fontsize=24)
             plt.savefig(basename+'fig5.png')
-            
+
         if plot_statistics:
         # Plot some relevant statistics of the OEM retrieval
             Altitude = self.arts.z_field.value.flatten()
             averaging_kernel = self.arts.dxdy.value @ self.arts.jacobian.value
             measurement_response = averaging_kernel @ np.ones(averaging_kernel.shape[1])
-            
+
             plt.figure(3, figsize=[12,8])
             plt.clf()
             [plt.plot(kernel[:-1],Altitude) for kernel in averaging_kernel.T]
             plt.title('Averaging kernel for the OEM retrieval',fontsize=24)
             plt.ylabel('Altitude [m]',fontsize=20)
             plt.savefig(basename+'fig3.png')
-            
+
             plt.figure(4, figsize=[12,8])
             plt.clf()
             plt.plot(measurement_response[:-1],Altitude)
@@ -495,9 +503,11 @@ class oem_retrieval():
         self.arts.abs_cont_descriptionAppend(tagname="O2-PWR98", model="Rosenkranz" )
         self.arts.abs_cont_descriptionAppend(tagname="N2-CIArotCKDMT252", model="CKDMT252" )
         self.arts.abs_cont_descriptionAppend(tagname="N2-CIAfunCKDMT252", model="CKDMT252" )
-        self.arts.abs_speciesSet(species=['O2-PWR98', 'H2O-PWR98', 
+        self.arts.abs_speciesSet(species=['O2-PWR98', 'H2O-PWR98',
                                           'N2-CIAfunCKDMT252, N2-CIArotCKDMT252'])
-        self.arts.abs_linesReadFromSplitArtscat(basename=xmls+'spectroscopy/Perrin/', fmin=142e9, fmax=143e9)
+        self.arts.abs_linesReadFromSplitArtscat(basename=os.path.join(xmls, 'spectroscopy/Perrin/'),
+                                                fmin=np.min(self.fit_freq)*1e9-1e8,
+                                                fmax=np.max(self.fit_freq)*1e9+1e8)
         self.arts.abs_lines_per_speciesCreateFromLines()
 
         # Set builtin Earth-viable isotopologue values and partition functions
