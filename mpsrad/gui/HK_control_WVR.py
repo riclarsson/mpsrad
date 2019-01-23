@@ -67,7 +67,7 @@ class HKwidget(DataSetShowGroupBox):
 # Control widget ==============================================================
 class Controlwidget(DataSetEditGroupBox):
 	class Controlset(DataSet):
-		Directory=DirectoryItem("Directory",default=os.path.abspath("../../data/"))
+		Directory=DirectoryItem("Directory",default=os.path.abspath("/home/dabrowski/data/"))
 
 		_bt=BeginGroup("Configuration").set_pos(col=0)
 		Frequency=FloatItem("Frequency",default=21.1,unit="GHz").set_prop("display",format="%3.1f")

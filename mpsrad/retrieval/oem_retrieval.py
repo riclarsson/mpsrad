@@ -3,11 +3,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal as sg
+from scipy.optimize import curve_fit
 import typhon
 from typhon.arts.workspace import Workspace, arts_agenda
 from scipy.optimize import leastsq
 from mpsrad.files import calibration
 import os
+
+
+def fft_bandpass(sig, percent):
+    fft_sig = np.fft.rfft(sig)
+    fft_sig[0:int(fft_sig.size * percent/100)] = 0
+    fft_sig[-int(fft_sig.size * percent/100):] = 0
+    return np.fft.irfft(fft_sig)
+
+
+def fft_highpass(sig, percent):
+    n = sig.size
+    fsig = np.fft.rfft(sig)
+    fsig[0:int(n * percent/100)] = 0
+    return np.fft.irfft(fsig)
+
+
+def fft_lowpass(sig, percent):
+    n = sig.size
+    fsig = np.fft.rfft(sig)
+    fsig[-int(n * percent/100):] = 0
+    return np.fft.irfft(fsig)
 
 
 class oem_retrieval():
@@ -547,9 +569,9 @@ class oem_retrieval():
         self.arts.AtmFieldsCalc()
 
         # Set observation geometry... You can make more positions and los
-        self.arts.sensor_pos = np.array([[300]])  # [[ALT, LAT, LON]] (Original)
+        self.arts.sensor_pos = np.array([[10000]])  # [[ALT, LAT, LON]] (Original)
 
-        self.arts.sensor_los = np.array([[35]])  # [[ZENITH, AZIMUTH]]
+        self.arts.sensor_los = np.array([[63]])  # [[ZENITH, AZIMUTH]]
 
         # Temperature and Ozone VMR Jacobian
         self.arts.jacobianInit()
@@ -588,8 +610,8 @@ class oem_retrieval():
         # Kernel panic if 'grid_1' and 'sigma_1' are not the same size
         self.arts.covmat1D(self.arts.covmat_block,
                     grid_1 = z_grid,
-                    sigma_1 = 0.1 * np.ones(n_p), # Relative uncertainty
-                    cls_1   = 0.5e3 * np.ones(n_p), # Correlation length [m]
+                    sigma_1 = 1e-7 * np.ones(n_p), # Relative uncertainty
+                    cls_1   = 1.0e3 * np.ones(n_p), # Correlation length [m]
                     fname   = "exp")
         self.arts.retrievalAddAbsSpecies(species = "H2O-PWR98",
                                   unit    = "vmr",
@@ -597,12 +619,16 @@ class oem_retrieval():
                                   g1      = self.arts.p_grid,
                                   g2      = np.array([]),
                                   g3      = np.array([]))
-        self.arts.jacobianSetFuncTransformation(transformation_func = "log10")
+        self.arts.jacobianSetFuncTransformation(transformation_func = "none")
 
         self.arts.covmatDiagonal(out = self.arts.covmat_block,
                             out_inverse = self.arts.covmat_inv_block,
                             vars = 100.0  * np.ones(1))
         self.arts.retrievalAddPolyfit(poly_order = 0)
+#        self.arts.covmatDiagonal(out = self.arts.covmat_block,
+#                            out_inverse = self.arts.covmat_inv_block,
+#                            vars = 100.0  * np.ones(8*2))
+#        self.arts.retrievalAddSinefit(period_lengths = np.array([10e3, 20e3, 1e6, 2e6, 5e6, 10e6, 20e6, 1e9]))
         self.arts.retrievalDefClose()
 
         # More uncertainty measurements
@@ -649,5 +675,6 @@ class oem_retrieval():
         self.arts.y.value[:] = self.average_signal
         self.arts.jacobian = np.zeros((0,0))
 
-        self.arts.OEM(method="lm", max_iter=20, display_progress=0,
+        self.arts.OEM(method="li", max_iter=20, display_progress=1,
                lm_ga_settings=np.array([100.0, 5.0, 2.0, 10.0, 1.0, 1.0]))
+        self.arts.avkCalc()

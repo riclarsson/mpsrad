@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
 		self.measurements=None
 
 		self.centralwidget=CentralWidget(self)
-		self.oem = oemWidget(self.centralwidget.tabs, [142.158, 142.192])
+		self.oem = oemWidget(self.centralwidget.tabs, [21, 23])
 		self.setCentralWidget(self.centralwidget)
 
 		self.HKvalues=self.centralwidget.HKvalues

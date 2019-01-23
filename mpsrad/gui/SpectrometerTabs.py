@@ -529,67 +529,81 @@ class MathPanel(PlotPanel):
 # Retrieval panel =============================================================
 class RetrievalPanel(PlotPanel):
 	def __init__(self,parent):
+		n = len(parent.sp)
+		cmap=get_cmap('tab10',n*2+3)
+		self.colors = [QPen(QColor(x[0]*255, x[1]*255, x[2]*255),1) for x in cmap.colors]
+
+
 		plots=\
 			[[
-				{'name':'Average Signal and Retrieved Signal','curves':['Data','Retrieval']},
-				{'name':'Residual Signal','curves':['Residual']}],
+				{'name':'Average Signal and Retrieved Signal','curves':[]},
+				{'name':'Residual Signal','curves':[]}],
 			[
 #				{'name':'Averaging kernel for OEM retrieval','curves':['Averaging']},
-				{'name':'Measurement response to OEM retrieval','curves':['Response']}],
+				{'name':'Measurement response to OEM retrieval','curves':[]}],
 			[
-				{'name':'Altitude vs. O3 VMR','curves':['Prior','OEM Retrieval']}],
+				{'name':'Altitude vs. H2O VMR','curves':['Prior']}],
 			]
+
+		for i in range(n):
+			plots[0][0]['curves'].append('Data'+str(i))
+			plots[0][0]['curves'].append('Retrieval'+str(i))
+			plots[0][1]['curves'].append('Residual'+str(i))
+			plots[1][0]['curves'].append('Response'+str(i))
+			plots[2][0]['curves'].append('OEM Retrieval'+str(i))
 
 		PlotPanel.__init__(self,parent=parent,plots=plots) #,axisLimits=axisLimits)
 
-		self.curves['Prior'].setPen(QPen(Qt.blue,1))
-		self.curves['OEM Retrieval'].setPen(QPen(Qt.red,1))
-		self.curves['Data'].setPen(QPen(Qt.blue,1))
-		self.curves['Retrieval'].setPen(QPen(Qt.red,1))
+		self.colors[2*n+2].setWidth(3)
+		self.curves['Prior'].setPen(self.colors[2*n+2])
 
-		pDaRe=self.curves['Data'].parent
-		pResi=self.curves['Residual'].parent
+		for i in range(n):
+			self.curves['OEM Retrieval'+str(i)].setPen(self.colors[2*i])
+			self.curves['Data'+str(i)].setPen(self.colors[2*i])
+			self.curves['Residual'+str(i)].setPen(self.colors[2*i])
+			self.curves['Response'+str(i)].setPen(self.colors[2*i])
+			self.colors[2*i+1].setWidth(3)
+			self.curves['Retrieval'+str(i)].setPen(self.colors[2*i+1])
+
+			pDaRe=self.curves['Data'+str(i)].parent
+			pResi=self.curves['Residual'+str(i)].parent
 #		pAver=self.curves['Averaging'].parent
-		pResp=self.curves['Response'].parent
-		pPOEM=self.curves['Prior'].parent
+			pResp=self.curves['Response'+str(i)].parent
+			pPOEM=self.curves['Prior'].parent
 
-		pPOEM.set_titles(ylabel='Altitude [m]',xlabel='O3 [ppmv]')
-		pDaRe.set_titles(ylabel='Brightness Temperature [K]',xlabel='Frequency [GHz]')
-		pResi.set_titles(ylabel='Residual [K]',xlabel='Frequency [GHz]')
+			pPOEM.set_titles(ylabel='Altitude [m]',xlabel='Retrieval')
+			pDaRe.set_titles(ylabel='Brightness Temperature [K]',xlabel='Frequency [GHz]')
+			pResi.set_titles(ylabel='Residual [K]',xlabel='Frequency [GHz]')
 #		pAver.set_titles(ylabel='Altitude [m]',xlabel='')
-		pResp.set_titles(ylabel='Altitude [m]',xlabel='')
+			pResp.set_titles(ylabel='Altitude [m]',xlabel='')
 
-		pDaRe.add_item(make.legend("TR"))
-		pDaRe.setActive()
+			pDaRe.add_item(make.legend("TR"))
+			pDaRe.setActive()
 
-		pPOEM.add_item(make.legend("TR"))
-		pPOEM.setActive()
+			pPOEM.add_item(make.legend("TR"))
+			pPOEM.setActive()
 
-		pDaRe.setDefaultAxis(axis=[142.1,142.2,100.,200.])
-		pResi.setDefaultAxis(axis=[142.1,142.2,-.5,.5])
+			pDaRe.setDefaultAxis(axis=[142.1,142.2,100.,200.])
+			pResi.setDefaultAxis(axis=[142.1,142.2,-.5,.5])
 #		pAver.setDefaultAxis(axis=[xmin,xmax,0.,1e5])
-		pResp.setDefaultAxis(axis=[-.1,2.,0.,1e5])
-		pPOEM.setDefaultAxis(axis=[-.1,12.,0.,1e5])
+			pResp.setDefaultAxis(axis=[-.1,2.,0.,1e5])
+			pPOEM.setDefaultAxis(axis=[-.1,12.,0.,1e5])
 
-	def refreshTab(self,oem):
-		Altitude=oem.arts.z_field.value.flatten()
-		averaging_kernel=oem.arts.dxdy.value @ oem.arts.jacobian.value
-		measurement_response=averaging_kernel @ np.ones(averaging_kernel.shape[1])
+	def refreshTab(self, oem):
+		altitude = np.copy(oem.altitude).flatten()
+		n = abs(len(altitude) - len(oem.xa))
+		for i in range(n):
+			altitude = np.append(altitude, altitude[-1]+1)
 
-		self.curves['Data'].setplot(oem.fit_freq,oem.average_signal)
-		self.curves['Retrieval'].setplot(oem.arts.f_grid.value/1e9,oem.arts.yf.value)
+		self.curves['Prior'].setplot(oem.xa,altitude)
+		for i in range(len(oem.meas_resp)):
+			self.curves['Data'+str(i)].setplot(oem.measurement_freq[i], oem.noise_mod_signal[i])
+			self.curves['Residual'+str(i)].setplot(oem.measurement_freq[i],oem.measurement_noise[i])
+			self.curves['OEM Retrieval'+str(i)].setplot(oem.x[i],altitude)
+			self.curves['Response'+str(i)].setplot(oem.meas_resp[i][0:len(altitude)],altitude)
 
-		self.curves['Prior'].setplot(10**oem.arts.xa.value[:-1]*1e6,Altitude)
-		self.curves['OEM Retrieval'].setplot(10**oem.arts.x.value[:-1]*1e6,Altitude)
-
-		self.curves['Residual'].setplot(oem.fit_freq,oem.average_signal-oem.arts.yf.value)
-
-#		a=np.hstack([np.hstack([Altitude,np.nan]) for kernel in averaging_kernel.T])
-#		k=np.hstack([np.hstack([kernel[:-1],np.nan]) for kernel in averaging_kernel.T])
-#
-#		self.curves['Averaging'].setplot(k,a,finite=False)
-
-		self.curves['Response'].setplot(measurement_response[:-1],Altitude)
+		for i in range(len(oem.meas_resp)):  # draw later because noise-less
+			self.curves['Retrieval'+str(i)].setplot(oem.measurement_freq[i],oem.yf[i])
 
 #		for n in self.curves: self.curves[n].parent.setDefaultAxisToCurveLimits()
 

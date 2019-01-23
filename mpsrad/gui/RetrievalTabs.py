@@ -8,7 +8,7 @@ Created on Thu Aug 30 15:26:37 2018
 
 import time
 import numpy as np
-from mpsrad.retrieval.oem_retrieval import oem_retrieval
+from mpsrad.retrieval.oem_retrieval import oem_retrieval, fft_bandpass, fft_lowpass, fft_highpass
 
 class oemWidget:
     def __init__(self, spectrometer_tabs, window):
@@ -18,8 +18,8 @@ class oemWidget:
         self.Retrieval = oem_retrieval()
 
         self.meas_resp=[]*len(self.tabs.sp)
-        self.vmr = []*len(self.tabs.sp)
-        self.apriori_vmr = None
+        self.x = []*len(self.tabs.sp)
+        self.xa = None
         self.noise_mod_signal = []*len(self.tabs.sp)
         self.yf = []*len(self.tabs.sp)
         self.altitude = None
@@ -36,10 +36,10 @@ class oemWidget:
     def init(self):
         assert not self._initialized, "Cannot be initialized first"
         self.altitude = None
-        self.apriori_vmr = None
+        self.xa = None
         time.sleep(10)
         self.meas_resp=[0]*len(self.tabs.sp)
-        self.vmr = [0]*len(self.tabs.sp)
+        self.x = [0]*len(self.tabs.sp)
         self.noise_mod_signal = [0]*len(self.tabs.sp)
         self.yf = [0]*len(self.tabs.sp)
         self.oem_diag = [0]*len(self.tabs.sp)
@@ -60,25 +60,39 @@ class oemWidget:
             time.sleep(5)
             return
 
-        signal = np.copy(self.tabs.sp[i].Ti)
-        noise = np.copy(self.tabs.sp[i].Tri)
+        signal = np.copy(self.tabs.sp[i].Ti)[::-1]
+
+        guess_of_high_alt_temp = 3.5
+        pseudo_trop_temp = 273.15
+        pseudo_opacity_below = - np.log((pseudo_trop_temp - np.mean(signal[50:150])) / (pseudo_trop_temp - guess_of_high_alt_temp))
+        pseudo_opacity_above = - np.log((pseudo_trop_temp - np.mean(signal[-150:-50])) / (pseudo_trop_temp - guess_of_high_alt_temp))
+        pseudo_transmission = np.exp(np.linspace(pseudo_opacity_below, pseudo_opacity_above, len(signal)))
+
+        pseudo_signal = signal * pseudo_transmission + pseudo_trop_temp * (1.0 - pseudo_transmission)
+
+        pseudo_signal[0:25]=pseudo_signal[25]
+        pseudo_signal[-25:1]=pseudo_signal[-25]
+        pseudo_signal = fft_lowpass(pseudo_signal, 25)
+        noise = np.copy(self.tabs.sp[i].Tri)[::-1]
+
         freq = np.linspace(self.tabs.sp[i].axisLimits[0],
                            self.tabs.sp[i].axisLimits[1], noise.size) / 1e3
-        freq += self.f0 - freq.mean()
+        freq += self.f0 - freq.mean() - 420e3*1e-9
 
-        self.Retrieval.load_data(data_type='numpy', signal=[signal],
+        self.Retrieval.load_data(data_type='numpy', signal=[pseudo_signal],
                                  noise=[noise],freq=freq)
-        self.Retrieval.process_data(lims=self.window, central_freq=self.f0)
-
+        self.Retrieval.process_data(lims=[22.22, 22.25], central_freq=self.f0)
         # Input booleans for filtering and shifting of the retrieval
         DoFilter = False
-        DoShift  = True
+        DoShift  = False
         if self.physical_sigma[i]:
-            n = self.tabs.sp[i].int_count
-            sigma = 2*noise[25:-25].mean()/np.sqrt(5 * n * (freq[1] - freq[0])*1e9)
+            n = self.tabs.sp[i].int_count / 2
+            sigma = np.median(noise)/np.sqrt(5 * n * (freq[1] - freq[0])*1e9)
             self.Retrieval.mean_retrieval(filtered=DoFilter,
                                           shift_freq=DoShift, sigma=sigma,
                                           central_freq=self.f0)
+        else:
+            print("Emitting non-physical sigma")
 
         skip_logic=False
         if self.Retrieval.arts.oem_diagnostics.value[4] == 20.0:
@@ -99,33 +113,33 @@ class oemWidget:
         if self.Retrieval.arts.oem_diagnostics.value[4] == 20:
             raise Warning('Could not converge even with noise-generated sigma!')
 
-#        self.Retrieval.plot_oem(basename='/home/dabrowski/Spec_Plots/spec{}_'.format(i))
+        vmr_is_log10 = True
+        if self.altitude is None: self.altitude = self.Retrieval.arts.z_field.value.flatten()
 
+        if self.xa is None:
+            self.xa = self.Retrieval.arts.xa.value[:-1]
+            if vmr_is_log10:
+                self.xa[0:len(self.altitude)] = self.xa[0:len(self.altitude)] * 1e6
 
+        self.x[i] = self.Retrieval.arts.x.value[:-1]
+        if vmr_is_log10:
+            self.x[i][0:len(self.altitude)] = self.x[i][0:len(self.altitude)] * 1e6
 
-
-
-        self.tabs.retrieval.refreshTab(self.Retrieval)
-
-
-
-
-
-        self.vmr[i] = 10**self.Retrieval.arts.x.value[:-1]
-        if self.apriori_vmr is not None: self.apriori_vmr = 10**self.Retrieval.arts.xa.value[:-1]
-        if self.altitude is not None: self.altitude = self.Retrieval.arts.z_field.value.flatten()
         self.noise_mod_signal[i] = np.copy(self.Retrieval.average_signal)
         self.yf[i] = np.copy(self.Retrieval.arts.yf.value)
         self.oem_diag[i] = np.copy(self.Retrieval.arts.oem_diagnostics.value)
         self.measurement_noise[i] = self.Retrieval.average_signal-self.yf[i]
         self.measurement_sigma[i] = self.measurement_noise[i].std()
-        self.measurement_freq[i] = self.Retrieval.fit_freq
+        self.measurement_freq[i] = np.copy(self.Retrieval.fit_freq)
 
-        averaging_kernel = (self.Retrieval.arts.dxdy.value @
-                           self.Retrieval.arts.jacobian.value)
+        averaging_kernel = np.copy(self.Retrieval.arts.avk.value)
         measurement_response = averaging_kernel @ np.ones(averaging_kernel.shape[1])
 
         self.meas_resp[i] = measurement_response
+
+        print("my calc done")
+        self.tabs.retrieval.refreshTab(self)
+        print('OEM plotting done')
 
     def setF0(self, F0):
         self.f0 = F0
@@ -133,7 +147,7 @@ class oemWidget:
     def run(self):
         # Safety size check
         if len(self.tabs.sp) != len(self.meas_resp): self.meas_resp = [0] * len(self.tabs.sp)
-        if len(self.tabs.sp) != len(self.vmr): self.vmr = [0] * len(self.tabs.sp)
+        if len(self.tabs.sp) != len(self.x): self.x = [0] * len(self.tabs.sp)
         if len(self.tabs.sp) != len(self.noise_mod_signal): self.noise_mod_signal = [0] * len(self.tabs.sp)
         if len(self.tabs.sp) != len(self.yf): self.yf = [0] * len(self.tabs.sp)
         if len(self.tabs.sp) != len(self.oem_diag): self.oem_diag = [0] * len(self.tabs.sp)
@@ -147,9 +161,9 @@ class oemWidget:
             self.refresh_oem(self.count)
             self._error=None
         except Exception as e:
-            print("OEM error or still waiting:", e)
             self._error=e
-            time.sleep(3)
+            print(e)
+            time.sleep(10)
 
     def save(self):
         pass
