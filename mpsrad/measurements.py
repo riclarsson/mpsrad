@@ -14,17 +14,19 @@ from mpsrad.backend import rcts104
 #from mpsrad.backend import pc104
 #from mpsrad.backend import acs
 from mpsrad.backend import FW
+from mpsrad.backend import XFW
 from mpsrad.backend import swicts
 from mpsrad.wiltron68169B import wiltron68169B
 from mpsrad.housekeeping.Agilent import Agilent34970A
 from mpsrad.housekeeping.sensors import sensors
 from mpsrad.frontend.dbr import dbr
-from . import files
-from . import dummy_hardware
+from mpsrad import files
+from mpsrad import dummy_hardware
 #from . import settings
 #from mpsrad.helper import APCUPS
 
 import time
+import struct
 import datetime
 import numpy as np
 
@@ -36,21 +38,32 @@ class measurements:
 		freq_range=(214, 270),
 		chopper_device="/dev/ttyUSB1", wobbler_address=b'0',
 		wiltron68169B_address=5,
-		wobbler_device="/dev/ttyUSB0", antenna_offset=1000,
+		wobbler_device="/dev/ttyUSB0", antenna_offset=1000,chopper_sleeptime=0.2,
 		dbr_port=1080, dbr_server="dbr",
 		integration_time=5000,
 		blank_time=5,
 		measurement_type="WVR",
 		mode="antenna", basename='../data/',
-		raw_formats=[files.dform, files.dform],
-		formatnames=['d', 'd'],
-		spectrometer_channels=[[4096], [4096]],
-		spectrometers=[rcts104, rcts104],
-		spectrometer_freqs=[[[1330, 1370]], [[1330, 1370]]],
-		spectrometer_hosts=["waspam6", "waspam4"],
-		spectrometer_names=["40 MHz CTS V", "40 MHz CTS H",],
-		spectrometer_tcp_ports=[1788, 1788],
-		spectrometer_udp_ports=[None, None]):
+		raw_formats=[files.dform, files.dform, files.xfftsform],
+#		raw_formats=[files.dform, files.xfftsform],
+		formatnames=['d', 'd', 'xffts'],
+#		formatnames=['d', 'xffts'],
+		spectrometer_channels=[[4096], [4096], [32768, 32768]],
+#		spectrometer_channels=[[4096], [32768, 32768]],
+		spectrometers=[rcts104, rcts104, XFW],
+#		spectrometers=[rcts104, XFW],
+		spectrometer_freqs=[[[1330, 1370]], [[1330, 1370]], [[0, 500], [0, 500]]],
+#		spectrometer_freqs=[[[1330, 1370]], [[0, 500], [0, 500]]],
+		spectrometer_hosts=["waspam6", "waspam4", 'localhost'],
+#		spectrometer_hosts=["waspam4", 'localhost'],
+		spectrometer_names=["40 MHz CTS V", "40 MHz CTS H", 'XFFTS'],
+#		spectrometer_names=["40 MHz CTS H", 'XFFTS'],
+		spectrometer_tcp_ports=[1788, 1788, 25144],
+#		spectrometer_tcp_ports=[1788, 25144],
+		spectrometer_udp_ports=[None, None, 16210],
+#		spectrometer_udp_ports=[None, 16210],
+		spectrometer_reversing=[True, True, False]):
+#		spectrometer_reversing=[True, False]):
 
 		""" Initialize the machine
 
@@ -60,7 +73,7 @@ class measurements:
 			freq (int):
 				Set the frequency of the device
 			freq_step (float):
-				Set the frequency step 
+				Set the frequency step
 			if_offset (int):
 				**INFO**
 			full_file (int):
@@ -119,7 +132,7 @@ class measurements:
 		else:
 			self.wob=IRAM.wobbler(device=wobbler_device,address=wobbler_address)
 		# Sets the chopper interactions
-		self.chop=chopper.chopper(device=chopper_device,offset=antenna_offset)
+		self.chop=chopper.chopper(device=chopper_device,offset=antenna_offset,sleeptime=chopper_sleeptime)
 		if mode == 'antenna':
 			self.order=[self.chop.set_cold, self.chop.set_ant,
 				self.chop.set_hot, self.chop.set_ant]
@@ -146,7 +159,8 @@ class measurements:
 				udp_port=spectrometer_udp_ports[i],
 				blank_time=blank_time,
 				frequency=spectrometer_freqs[i],
-				name=spectrometer_names[i]))
+				name=spectrometer_names[i],
+				reverse_data=spectrometer_reversing[i]))
 		self._spectrometers_count=len(self.spec)
 		assert self._spectrometers_count, "Must have at least one spectrometer"
 
@@ -182,11 +196,11 @@ class measurements:
 
 		# Counter
 		self._i=0
-		
+
 #		self._ups = APCUPS()
 
 		self._initialized=False
-		
+
 		self.housekeeping = {"Instrument": {},
 				"Environment": {"Room [K]": 3000.,
 						"Cold Load [K]": 0.12,
@@ -229,7 +243,7 @@ class measurements:
 
 			print("Init chopper")
 			try: self.chop.init()  # Can set nothing
-			except: 
+			except:
 				self._dum_chop=dummy_hardware.dummy_hardware('CHOPPER')
 				self._dum_chop.init()
 			try:
@@ -239,8 +253,6 @@ class measurements:
 			except:
 				self._dum_spec=dummy_hardware.dummy_hardware('SPECTROMETER')
 				self._dum_spec.init()
-				
-#			self._ups.init()
 
 			print("All machines are initialized!")
 			self._initialized=True
@@ -263,7 +275,7 @@ class measurements:
 				print("ERROR IN SETTING THE MOTION PATTERN")
 				time.sleep(0.5)
 				print("NOT CONNECTED TO WOBBLER")
-			
+
 			if self.measurement_type=='IRAM':
 				print("Set frequency")
 				self.set_frequency(self._freq)
@@ -300,100 +312,90 @@ class measurements:
 		   - 15 : Requested intermediate frequency
 		"""
 		assert self._initialized, "Cannot run uninitialized measurement series"
+		debug_msg = "running spectrometer"
 		try:
 			self._times=[]
 			self._housekeeping=[]
 			for i in range(4):
-				try:
-					# print("setting pointing")
-					self.order[i]()
-				except:
-					function=self.order[i].__name__
-					self._dum_chop.run_issue(3,function)
-			
-				# print("adding time")
-				self._times.append(int(time.time()))
-				
-#				ups_active, ups_power = self._ups.run()
-#				UPS_ERROR = 50
-#				if ups_active == 1:
-#					pass  # UPS is active and all is fine
-#				elif ups_active == 0:
-#					if ups_power < UPS_ERROR:  # Shutdown at 50% power
-#						self.close()
-#						time.sleep(3)
-#						self._ups.close()
-#					else:
-#						print('UPS is on Battery.', ups_power,
-#						      '% power remaining.  Will shutdown when',
-#						      'less than', UPS_ERROR, '% remains')
-#						pass  # UPS is inactive but power is still high
-#				else:
-#					pass  # The trick is, that there is no UPS
+				self.order[i]()
 
-				# This is where housekeeping data should go...
-#				print("generating housekeeping")
+				t = time.time()
+				hk = np.zeros((16), dtype=np.float32)
 
 				if self.measurement_type=='IRAM':
-					try:
-						debug_msg='housekeeping'
-						self._housekeeping.append(np.zeros((16)))
 
-						debug_msg='HK_cryo'
-						self._housekeeping[-1][0]=float(self.dbr.get_value('cryo.ColdLd.val'))
+					hk[0]=float(self.dbr.get_value('cryo.ColdLd.val'))
 
-						debug_msg='HK_temps'
-						sensors=self.temperature.get_values()
-						self._housekeeping[-1][1]=self.temperature.C2K(sensors['Temp0'])
-						self._housekeeping[-1][2]=self.temperature.C2K(sensors['Temp1'])
-						self._housekeeping[-1][3]=sensors['Humidity']
+					sensors=self.temperature.get_values()
+					hk[1]=self.temperature.C2K(sensors['Temp0'])
+					hk[2]=self.temperature.C2K(sensors['Temp1'])
+					hk[3]=sensors['Humidity']
 
-						debug_msg='HK_chopper_pos'
-	#					self._housekeeping[-1][4]=ord(self.get_order()[i])
-						self._housekeeping[-1][4]=self.chop.get_pos()[0]
+					hk[4]=self.chop.get_pos()[0]
 
-						debug_msg='HK_dbr'
-						self._housekeeping[-1][6]=float(self.dbr.get_value('cryo.Band2.val'))
-						self._housekeeping[-1][7]=float(self.dbr.get_value('cryo.Band3.val'))
-						self._housekeeping[-1][8]=float(self.dbr.get_value('cryo.T_77K.val'))
-						self._housekeeping[-1][9]=float(self.dbr.get_value('cryo.T_15K.val'))
-						self._housekeeping[-1][10]=float(self.dbr.get_value('cryo.T_04K.val'))
-						self._housekeeping[-1][11]=float(self.dbr.get_value('B2.flo.req'))
-						self._housekeeping[-1][12]=float(self.dbr.get_value('B3.flo.req'))
-						self._housekeeping[-1][13]=float(self._ref)
-						self._housekeeping[-1][14]=float(self._freq)
-						self._housekeeping[-1][15]=float(self._if)
-					except:
-						self._dum_HK.run_issue(3)
+					hk[6]=float(self.dbr.get_value('cryo.Band2.val'))
+					hk[7]=float(self.dbr.get_value('cryo.Band3.val'))
+					hk[8]=float(self.dbr.get_value('cryo.T_77K.val'))
+					hk[9]=float(self.dbr.get_value('cryo.T_15K.val'))
+					hk[10]=float(self.dbr.get_value('cryo.T_04K.val'))
+					hk[11]=float(self.dbr.get_value('B2.flo.req'))
+					hk[12]=float(self.dbr.get_value('B3.flo.req'))
+					hk[13]=float(self._ref)
+					hk[14]=float(self._freq)
+					hk[15]=float(self._if)
+
+					data = {'cold_load': np.array([hk[0]]),
+					        'hot_load': np.array([hk[1]]),
+					        'air_temp': np.array([hk[2]]),
+					        'rel_humid': np.array([hk[3]]),
+					        'chop_pos': np.array([hk[4]]),
+					        'int_time': np.array([hk[5]]),
+					        'temp_b2': np.array([hk[6]]),
+					        'temp_b3': np.array([hk[7]]),
+					        'temp_77k': np.array([hk[8]]),
+					        'temp_15k': np.array([hk[9]]),
+					        'temp_4k': np.array([hk[10]]),
+					        'lo_b2': np.array([hk[11]]),
+					        'lo_b3': np.array([hk[12]]),
+					        'lo_ref': np.array([hk[13]]),
+					        'f_req': np.array([hk[14]]),
+					        'if_req': np.array([hk[15]])}
 				else:
-					debug_msg='HK_Agilent'
-					self._housekeeping.append(np.zeros((16)))
-					self._housekeeping[-1][1:]=self.multimeter.getSensors()
+					hk[1:]=self.multimeter.getSensors()
 
+					data = {'hemt_temp': np.array([hk[1]]),
+					        'cold_load': np.array([hk[2]]),
+					        'hot_load': np.array([hk[3]]),
+					        'cts1_temp1': np.array([hk[4]]),
+					        'cts1_temp2': np.array([hk[5]]),
+					        'air_temp': np.array([hk[7]]),
+					        'cts2_temp1': np.array([hk[10]]),
+					        'cts2_temp2': np.array([hk[11]]),
+					        'air_temp2': np.array([hk[13]])}
 
-				try:
-					debug_msg='wobbler_move'
-#					print("moving wobbler")
-					time.sleep(0.5)
-					self.wob.move(self._wobbler_position[i])
-				except:
-					self._dum_wob.run_issue(3,'MOVE')
-				
-				debug_msg='spec_run'
-#				print("telling to gather data")
+				data['time'] = np.array([t])
+
+				self._times.append(t)
+				self._housekeeping.append(hk)
+
+				self.wob.move(self._wobbler_position[i])
 
 				for s in self.spec: s.run()
-				
-				debug_msg='get_data'
+
 				for s in self.spec:
-#					print(s.name)
 					s.get_data(i)
 
-				try:
-					debug_msg='wobbler_wait'
-					self.wob.wait()
-				except: 
-					self._dum_wob.run_issue(3,'WAIT')
+				for count in range(len(self.spec)):
+					data['record'] = np.float32(self.spec[count]._data[i])
+					self._files[count].save(data, self.spec[count].name)
+
+				self.wob.wait()
+
+				#save(self.spec, self._files, hk, t, self.newfile, i)
+				self.newfile=False
+				print("Saved chooper pos", i, 'measurement count', self._i, "at", datetime.datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M:%S'))
+				self._i += 1
+
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -410,49 +412,17 @@ class measurements:
 		"""
 		return [l.__name__.replace('set_','')[0].upper() for l in self.order]
 
-
-	def save(self):
-		"""Save the CAHA series to the provided files
-		
-		Measurements must be initialized already.
-		"""
-		assert self._initialized, ("Cannot save uninitialized measurement "
-								"series")
-		try:
-			for i in range(4):
-				# Need to take into account multiple spectrometers sometime...
-				print('saving spectra '+str(self._i*4+i))
-				for j in range(self._spectrometers_count):
-					if self._formatnames[j]=='s':
-						self.raw[j].append_to_swictsfile(self._files[j], self._times[i],
-							self._housekeeping[i],self.spec[j]._data[i])
-					elif 'test' in self._formatnames[j]:
-						self.raw[j].append_to_testfile(self._files[j], self._times[i],
-							self._housekeeping[i],self.spec[j]._data[i][2:-2], self.spec[j]._testarray[i])
-					else:
-						self.raw[j].append_to_file(self._files[j], self._times[i],
-							self._housekeeping[i],self.spec[j]._data[i][2:-2])
-					
-		except KeyboardInterrupt:
-			self.close()
-			print("Exiting")
-			exit(0)
-		except:
-			self.close()
-			raise RuntimeError("Unexpected runtime error in save")
-
 	def update(self):
 		"""Keep track of counts to either change frequency or filename
-		
+
 		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update uninitialized measurement "
 			"series")
 		try:
-			self._i+=1
 			if self._sweep and not self._i % self._sweep_step:
 				self.update_freq()
-			if not self._i*4 % self._full_file:
+			if self._full_file == self._files[0].pos:
 				self.set_filenames()
 		except KeyboardInterrupt:
 			self.close()
@@ -464,7 +434,7 @@ class measurements:
 
 	def update_freq(self):
 		"""Update the frequency to the next choosen level.
-		
+
 		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot update frequency of uninitialized "
@@ -487,20 +457,22 @@ class measurements:
 			raise RuntimeError("Unexpected runtime error in update")
 
 	def set_filenames(self):
-		"""Set the names of the files to write to
-		
+		"""Set the files to write to
+
 		Measurements must be initialized already.
 		"""
-		assert self._initialized, ("Cannot set filename of uninitialized "
+		assert self._initialized, ("Cannot set files of uninitialized "
 			"measurement series")
 		try:
 			self._files=[]
 			t=datetime.datetime.now().isoformat().split('.')[0]
 			for i in range(self._spectrometers_count):
-				self._files.append(self._basename+self._formatnames[i] +
-					t+'.'+str(i)+'.raw')
+				self._files.append(files.raw_nc(self._basename+self._formatnames[i] +
+								t+'.'+str(i)+'.nc', self._full_file))
+
 			for f in self._files:
-				print("Printing to "+f)
+				print("Printing {} records to {}".format(self._full_file, f.filename))
+			self.newfile=True
 		except KeyboardInterrupt:
 			self.close()
 			print("Exiting")
@@ -512,10 +484,10 @@ class measurements:
 	def set_frequency(self, freq):
 		"""Set the frequency of the measurement.  Keeps track of IF
 
-		Parameters: 
+		Parameters:
 			freq (float):
 				Frequency of the measurement
-		
+
 		Measurements must be initialized already.
 		"""
 		assert self._initialized, ("Cannot set frequenct of uninitialized "
@@ -537,6 +509,9 @@ class measurements:
 		except:
 			self.close()
 			raise RuntimeError("Unexpected runtime error in set_frequency")
+
+	def save(self):
+		pass
 
 	def close(self):
 		"""Tries to close all devices upon error with any of them...
@@ -593,3 +568,19 @@ class measurements:
 		except:
 			pass
 		print('Closed '+str(n)+'/'+str(ndevices)+' devices')
+
+
+def save(spec, files, hk, time, newfile=False, ind=0):
+	hkbuf = struct.Struct('i').pack(time) + np.array(hk, dtype=np.float32).tobytes()
+	for i in range(len(files)):
+		if newfile:
+			oneint = struct.Struct('i')
+			buf = oneint.pack(3) + oneint.pack(1) + oneint.pack(len(hk)) + oneint.pack(len(spec[i]._data[ind])) + oneint.pack(len(b'TIME;HOUSEKEEPING;DATA')) + b'TIME;HOUSEKEEPING;DATA'
+			f = open(files[i], 'wb')
+			f.write(buf)
+			f.close()
+
+		f = open(files[i], 'ab')
+		f.write(hkbuf + np.array(spec[i]._data[ind], dtype=np.float32).tobytes())
+		f.close()
+

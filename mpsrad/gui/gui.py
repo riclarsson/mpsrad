@@ -3,7 +3,7 @@
 """
 IRAM GUI
 
-Last modification: 26.07.2018
+Last modification: 23.05.2019
 
 Author: Borys Dabrowski
 """
@@ -40,7 +40,7 @@ class CentralWidget(QSplitter):
 		self.setOrientation(Qt.Vertical)
 
 		# Toolbar
-		toolbar=ToolBar(parent.getIcon,parent.measureInitToggle,parent.measureStartStop)
+		toolbar=ToolBar(parent.getIcon,parent.measureInitToggle,parent.measureStartStop,parent=self)
 		toolbar.setOrientation(Qt.Vertical)
 
 		# Spectrometers in tabs
@@ -97,7 +97,7 @@ class MainWindow(QMainWindow):
 
 		self.init=False
 		self.running=False
-		
+
 		self.oeminit=False
 		self.oemrunning=False
 
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
 		else: self.oemrunning=False
 		if self.oemrunning: self.oemThread.do('run')
 		else: self.oemThread.do(None)
-		
+
 	# timer callback function
 	def updateTimer(self):
 		self.timer.stop()
@@ -205,17 +205,17 @@ class MainWindow(QMainWindow):
 				if len(self.measurements._housekeeping)>0:
 					chopper_pos=order[len(self.measurements._housekeeping)-1]
 #					Tc,Th=self.measurements.multimeter.getSensors()[1:3]
-					
-					Tc=self.measurements._housekeeping[-1][0]
-					Th=self.measurements._housekeeping[-1][1]
+
+					Tc=self.measurements._housekeeping[-1][2]
+					Th=self.measurements._housekeeping[-1][3]
 					if Tc!=0: self._Tc=Tc
 					if Th!=0: self._Th=Th
 					Tc = self._Tc
 					Th = self._Th
-#					print(Tc,Th)
+
 #					Tc,Th=21.,295.
-					Tc=62.3
-					Th=121.5
+					Tc=63.9
+					Th=119.2
 
 					self.centralwidget.tabs.refreshTabs(Tc,Th,order,chopper_pos)
 			except: pass
@@ -243,7 +243,7 @@ def begin():
 #if __name__=='__main__':
 #	start()
 
-if __name__=='__main__':
+if __name__=='__main__':  # NOTE: No interaction with "window" possible, so no reset-button
 	# Show GUI ==============================================================
 #	from guidata import qapplication
 	app=qapplication()

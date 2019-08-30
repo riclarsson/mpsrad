@@ -28,7 +28,8 @@ class pc104:
                  channels=[4096],
                  integration_time=1000,
                  blank_time=None,
-                 data_storage_containers=4):
+                 data_storage_containers=4,
+                 reverse_data=False):
         """
         Parameters:
             name (str):
@@ -69,6 +70,8 @@ class pc104:
         # Host information
         self._tcp_port=tcp_port
         self._host=host
+
+        self.reverse=reverse_data
 
     def init(self):
         assert self._initialized is False, "Not allowed to reinitialize"
@@ -112,6 +115,9 @@ class pc104:
 
         self._data[int(i)] = self._recv_data()
         self._sent = False
+
+        if self.reverse:
+            self._data[int(i)] = self._data[int(i)][::-1]
 
     def set_housekeeping(self, hk):
         """ Sets the housekeeping data dictionary.  hk must be dictionary """

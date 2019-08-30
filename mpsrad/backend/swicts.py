@@ -32,7 +32,8 @@ class swicts:
 			channels=[10000],
 			integration_time=1000,
 			blank_time=None,
-			data_storage_containers=4):
+			data_storage_containers=4,
+			reverse_data=False):
 
 		self.name=name
 		self.frequency=frequency
@@ -53,6 +54,7 @@ class swicts:
 		self._tcp_port=tcp_port
 		self._host=host
 
+		self.reverse=reverse_data
 
 	def _swictsconnect(self):
 		assert not self._initialized, "Cannot init an initialized CTS"
@@ -134,6 +136,9 @@ class swicts:
 		self._data[int(i)] = self._data[int(i)]
 
 		self._sent=False
+
+		if self.reverse:
+			self._data[int(i)] = self._data[int(i)][::-1]
 
 	def save_data(self, basename="/home/dabrowski/data/test/SWICTS", file=None,
 			binary=True):

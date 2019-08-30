@@ -549,6 +549,7 @@ class RetrievalPanel(PlotPanel):
 			plots[0][0]['curves'].append('Data'+str(i))
 			plots[0][0]['curves'].append('Retrieval'+str(i))
 			plots[0][1]['curves'].append('Residual'+str(i))
+			plots[0][1]['curves'].append('Fitted Sines'+str(i))
 			plots[1][0]['curves'].append('Response'+str(i))
 			plots[2][0]['curves'].append('OEM Retrieval'+str(i))
 
@@ -561,6 +562,7 @@ class RetrievalPanel(PlotPanel):
 			self.curves['OEM Retrieval'+str(i)].setPen(self.colors[2*i])
 			self.curves['Data'+str(i)].setPen(self.colors[2*i])
 			self.curves['Residual'+str(i)].setPen(self.colors[2*i])
+			self.curves['Fitted Sines'+str(i)].setPen(self.colors[2*i+1])
 			self.curves['Response'+str(i)].setPen(self.colors[2*i])
 			self.colors[2*i+1].setWidth(3)
 			self.curves['Retrieval'+str(i)].setPen(self.colors[2*i+1])
@@ -583,27 +585,29 @@ class RetrievalPanel(PlotPanel):
 			pPOEM.add_item(make.legend("TR"))
 			pPOEM.setActive()
 
-			pDaRe.setDefaultAxis(axis=[142.1,142.2,100.,200.])
-			pResi.setDefaultAxis(axis=[142.1,142.2,-.5,.5])
+			pResi.add_item(make.legend("TR"))
+			pResi.setActive()
+
+			pDaRe.setDefaultAxis(axis=[22.22,22.25,2.,6.])
+			pResi.setDefaultAxis(axis=[22.22,22.25,-.5,.5])
 #		pAver.setDefaultAxis(axis=[xmin,xmax,0.,1e5])
 			pResp.setDefaultAxis(axis=[-.1,2.,0.,1e5])
 			pPOEM.setDefaultAxis(axis=[-.1,12.,0.,1e5])
 
-	def refreshTab(self, oem):
+	def refreshTab(self, oem, i=0):
 		altitude = np.copy(oem.altitude).flatten()
 		n = abs(len(altitude) - len(oem.xa))
-		for i in range(n):
+
+		for _ in range(n):
 			altitude = np.append(altitude, altitude[-1]+1)
 
 		self.curves['Prior'].setplot(oem.xa,altitude)
-		for i in range(len(oem.meas_resp)):
-			self.curves['Data'+str(i)].setplot(oem.measurement_freq[i], oem.noise_mod_signal[i])
-			self.curves['Residual'+str(i)].setplot(oem.measurement_freq[i],oem.measurement_noise[i])
-			self.curves['OEM Retrieval'+str(i)].setplot(oem.x[i],altitude)
-			self.curves['Response'+str(i)].setplot(oem.meas_resp[i][0:len(altitude)],altitude)
-
-		for i in range(len(oem.meas_resp)):  # draw later because noise-less
-			self.curves['Retrieval'+str(i)].setplot(oem.measurement_freq[i],oem.yf[i])
+		self.curves['Data'+str(i)].setplot(oem.measurement_freq[i], oem.noise_mod_signal[i])
+		self.curves['Residual'+str(i)].setplot(oem.measurement_freq[i],oem.measurement_noise[i])
+		self.curves['OEM Retrieval'+str(i)].setplot(oem.x[i],altitude)
+		self.curves['Response'+str(i)].setplot(oem.meas_resp[i][0:len(altitude)],altitude)
+		self.curves['Retrieval'+str(i)].setplot(oem.measurement_freq[i],oem.yf[i])
+		self.curves['Fitted Sines'+str(i)].setplot(oem.measurement_freq[i],oem.measurement_noise_fit[i])
 
 #		for n in self.curves: self.curves[n].parent.setDefaultAxisToCurveLimits()
 

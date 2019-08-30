@@ -2,7 +2,7 @@
 """
 Created: 07.03.2018
 
-Last modification: 09.07.2018
+Last modification: 17.05.2019
 
 Author: Borys Dabrowski
 
@@ -14,7 +14,7 @@ from time import time,sleep
 from mpsrad.helper import serialCheck
 
 class chopper:
-	def __init__(self,device='/dev/chopper',offset=1000):
+	def __init__(self,device='/dev/chopper',offset=1000, sleeptime=0):
 		"""
 		Parameters:
 			device (str):
@@ -26,6 +26,8 @@ class chopper:
 		self._initialized=False
 		self._device=device
 		self._offset=offset
+		self._oldpos=None
+		self.sleeptime = sleeptime
 
 	def _ask(self,cmd):
 		if isinstance(cmd,str): cmd=cmd.encode()
@@ -68,23 +70,49 @@ class chopper:
 		if isinstance(new_pos,str): new_pos=new_pos.encode()
 		assert self._initialized, "Must first initialize the chopper"
 		old_pos=self.get_pos()
-		assert not old_pos==b'E', "Must reset the chopper controller"
+		assert not old_pos[0]==b'E'[0], "Must reset the chopper controller"
 
 		order=b"RAHC"
-		a,b=order.index(old_pos[0]),order.index(new_pos[0])
+		try: a,b=order.index(old_pos[0]),order.index(new_pos[0])
+		except:
+			print("Old: ",old_pos)
+			print("New: ",new_pos)
+			with open("/home/dabrowski/error.msg","w") as file: file.write("Chopper error!")
+			assert 0, "Chopper error"
+
+
+
 		d=-1 if a>b else 1
-		if old_pos[0]==new_pos[0]==b'A': r=[1]
+		if old_pos[0]==new_pos[0]==b'A'[0]: r=[1]
 		else: r=range(a,b+d,d)[1:]
 		for n in r:
 			if n==b: cmd=new_pos
 			else: cmd=b'%c'%order[n]
-			if self._ask(cmd)==b'E': return 1
+
+
+# Quick fix for the chopper issue
+#			if self._ask(cmd)[0]==b'E': return 1
+			self._oldpos=cmd
+			self._ask(cmd)
+
+		sleep(self.sleeptime)
+
 		return 0
 
 	def get_pos(self):
 		"""Gets the device pointing"""
 		assert self._initialized, "Must first initialize the chopper"
-		return self._ask('?')
+		answ=self._ask('?')
+
+
+# Quick fix for the chopper issue
+		if answ[0]==b'E'[0]:
+			answ=self._oldpos
+			print("Problem with chopper, adjusting")
+#			with open("/home/dabrowski/chopper.msg","ab") as file: file.write(b"%c\n"%answ)
+
+
+		return answ
 
 	def init(self):
 		"""Connection with the chopper and set the device access
@@ -99,13 +127,13 @@ class chopper:
 		greetings=self._ask('G')
 		self._initialized=True
 		return greetings
-	
+
 	def set_housekeeping(self, hk):
 		""" Sets the housekeeping data dictionary.  hk must be dictionary """
 		assert self._initialized, "Can set housekeeping when initialized"
-		
+
 		hk['Instrument']['Chopper'] = {"Position": self.get_pos()}
-		
+
 	def _close_and_restore(self):
 		""" Close the device access"""
 		assert self._initialized, "Cannot close uninitialized chopper"

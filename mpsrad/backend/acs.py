@@ -38,7 +38,8 @@ class acs:
 			channels=[1023],
 			integration_time=1000,
 			blank_time=None,
-			data_storage_containers=4):
+			data_storage_containers=4,
+			reverse_data=False):
 
 		self.name=name
 		self.frequency=frequency
@@ -60,6 +61,8 @@ class acs:
 		self._host=host
 
 		self.dB=0
+
+		self.reverse=reverse_data
 
 	def init(self):
 		assert not self._initialized, "Cannot init an initialized ACS"
@@ -261,6 +264,9 @@ class acs:
 #		self._data[int(i)]=qc_power*np.absolute(np.fft.hfft(II+QQ+1j*(IQ-QI)))*K
 		self._data[int(i)]=K*yqq
 		self._sent=False
+
+		if self.reverse:
+			self._data[int(i)] = self._data[int(i)][::-1]
 
 	def set_housekeeping(self, hk):
 		""" Sets the housekeeping data dictionary.  hk must be dictionary """

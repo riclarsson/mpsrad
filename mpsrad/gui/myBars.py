@@ -2,7 +2,7 @@
 """
 Active status bar widget and toolbar widget with buttons
 
-Last modification: 29.06.2018
+Last modification: 23.05.2019
 
 Author: Borys Dabrowski
 """
@@ -73,9 +73,10 @@ class ToolBar(QToolBar):
 
 	.. note:: For more information about the QToolBar's methods and attributes used here, please refer to the `QtoolBar documentation <http://pyqt.sourceforge.net/Docs/PyQt4/qtoolbar.html>`_
 	"""
-	def __init__(self,getIcon,measureInitToggle,measureStartStop):
+	def __init__(self,getIcon,measureInitToggle,measureStartStop,parent=None):
 		QToolBar.__init__(self)
 
+		self.parent=parent
 		self.resizeX=False
 		self.resizeY=False
 
@@ -126,102 +127,13 @@ class ToolBar(QToolBar):
 	def toggleY(self,*args):
 		self.resizeY= not self.resizeY
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Intentionally left blank
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
-		
-		
-		
-		
-		
 	def reset_integration(self,*args):
 		try:
-			for tab in mpsrad.gui.guiIRAM.window.centralwidget.tabs.sp:
+			for tab in self.parent.tabs.sp:
 				tab._mean['count'] = 0
-		except:
+		except Exception as e: 
+			print(e)
 			print("Can only reset existing measurements")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Intentionally left blank
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	def getX(self):
 		return self.resizeX

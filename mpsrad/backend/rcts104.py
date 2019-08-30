@@ -25,7 +25,8 @@ class rcts104:
 			channels=[7504],
 			integration_time=1000,
 			blank_time=None,
-			data_storage_containers=4):
+			data_storage_containers=4,
+			reverse_data=False):
 		"""
 		Parameters:
 			name (any):
@@ -64,6 +65,7 @@ class rcts104:
 		self._tcp_port=tcp_port
 		self._host=host
 
+		self.reverse=reverse_data
 
 	def _pc104connect(self):
 		"""Initialize the machine by locking onto it
@@ -176,6 +178,10 @@ class rcts104:
 		self._data[int(i)]=np.array([n/cycles for n in x])
 
 		self._sent=False
+
+
+		if self.reverse:
+			self._data[int(i)] = self._data[int(i)][::-1]
 
 	def set_housekeeping(self, hk):
 		""" Sets the housekeeping data dictionary.  hk must be dictionary """

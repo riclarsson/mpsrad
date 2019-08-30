@@ -28,7 +28,8 @@ class FW:
             channels=np.array([8192,8192]),
             integration_time=1000,
             blank_time=1,
-            data_storage_containers=4):
+            data_storage_containers=4,
+            reverse_data=False):
         """
         Parameters:
             host (str):
@@ -64,6 +65,7 @@ class FW:
         self._blank_time=str(int(blank_time * 1000))
         self._copies_of_vectors=int(data_storage_containers)
         self.frequency = frequency
+        self.reverse=reverse_data
 
         self._initialized=False
         self._sent=False
@@ -165,6 +167,9 @@ class FW:
             self._data[i]=np.array(d,dtype=np.float32)
             self._time=h[4].decode('utf8').strip()
         self._sent=False
+
+        if self.reverse:
+            self._data[i] = self._data[i][::-1]
 
     def save_data(self,basename="/home/waspam/data/test/FW",binary=True):
         """Saves data to file at basename+filename.

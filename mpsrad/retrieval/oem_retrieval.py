@@ -565,7 +565,7 @@ class oem_retrieval():
         # "t.xml"
         # "z.xml"
         # The files can be in binary format
-        self.arts.AtmRawRead(basename=xmls+'planets/Earth/Fascod/subarctic-summer/subarctic-summer')
+        self.arts.AtmRawRead(basename=xmls+'planets/Earth/Fascod/subarctic-winter/subarctic-winter')
         self.arts.AtmFieldsCalc()
 
         # Set observation geometry... You can make more positions and los
