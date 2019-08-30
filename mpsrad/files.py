@@ -738,7 +738,7 @@ class raw_nc:
         return self.filename
     __str__ = __repr__
 
-    def save(self, data, source=None):
+    def save(self, data, source=None, recordslen=1):
         """ Save dict of data to file
 
         If this is the first call to "save", the dimensions of
@@ -779,6 +779,7 @@ class raw_nc:
 
         if self.new:
             f.createDimension('records', self.size)
+            f.createDimension('spectras', recordslen)
 
             dims = []
             input = []
@@ -790,7 +791,7 @@ class raw_nc:
                     elif len(data[key]) == 2:
                         f.createDimension('two', 2)
                     elif key == 'record':
-                        f.createDimension('channels', len(data[key]))
+                        f.createDimension('channels', len(data[key])//recordslen)
                     else:
                         f.createDimension('n' + key, len(data[key]))
 
@@ -799,20 +800,21 @@ class raw_nc:
                 elif len(data[key]) == 2:
                     input.append(f.createVariable(key, type(data[key][0]), ('records', 'two')))
                 elif key == 'record':
-                    input.append(f.createVariable(key, type(data[key][0]), ('records', 'channels')))
+                    input.append(f.createVariable(key, type(data[key][0]), ('records', 'spectras', 'channels')))
                 else:
                     input.append(f.createVariable(key, type(data[key][0]), ('records', 'n'+key)))
 
-                input[-1][self.pos] = np.nan_to_num(data[key])
-
             f.start_time = now
 
-        else:
-            for key in data:
-                var = f.variables[key]
+        for key in data:
+            var = f.variables[key]
+
+            if key == 'record':
+                var[self.pos] = np.reshape(np.nan_to_num(data[key]), (recordslen, len(data[key])//recordslen))
+            else:
                 var[self.pos] = np.nan_to_num(data[key])
 
-            f.end_time = now
+        f.end_time = now
 
         f.pos = self.pos
         f.close()

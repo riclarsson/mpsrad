@@ -44,12 +44,8 @@ class measurements:
 		blank_time=5,
 		measurement_type="WVR",
 		mode="antenna", basename='../data/',
-		raw_formats=[files.dform, files.dform, files.xfftsform],
-#		raw_formats=[files.dform, files.xfftsform],
 		formatnames=['d', 'd', 'xffts'],
-#		formatnames=['d', 'xffts'],
 		spectrometer_channels=[[4096], [4096], [32768, 32768]],
-#		spectrometer_channels=[[4096], [32768, 32768]],
 		spectrometers=[rcts104, rcts104, XFW],
 #		spectrometers=[rcts104, XFW],
 		spectrometer_freqs=[[[1330, 1370]], [[1330, 1370]], [[0, 500], [0, 500]]],
@@ -170,11 +166,6 @@ class measurements:
 			self.dbr=dbr(port=dbr_port, server=dbr_server)
 		else:
 			self.multimeter=Agilent34970A()
-
-		# Sets the file interactions
-		self.raw=[]
-		for i in range(self._spectrometers_count):
-			self.raw.append(files.raw(format=raw_formats[i]))
 
 #		self.temperature=pt100()
 		if self.measurement_type=='IRAM':
@@ -387,7 +378,7 @@ class measurements:
 
 				for count in range(len(self.spec)):
 					data['record'] = np.float32(self.spec[count]._data[i])
-					self._files[count].save(data, self.spec[count].name)
+					self._files[count].save(data, self.spec[count].name, len(self.spec[count].frequency))
 
 				self.wob.wait()
 
