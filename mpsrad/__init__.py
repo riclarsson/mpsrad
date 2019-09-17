@@ -15,10 +15,11 @@ if not __MPS_SETUP__:
     from . import frontend
     from . import files
     from . import backend
-    from . import pt100   
+    from . import pt100
     from . import wiltron68169B
     from . import wobbler
     from . import housekeeping
     from . import gui
     from . import helper
     from . import dummy_hardware
+    from . import retrieval

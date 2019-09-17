@@ -7,6 +7,7 @@ Author: Richard Larsson
 
 """
 
+
 import struct
 import numpy as np
 import scipy as sp
@@ -768,8 +769,7 @@ class raw_nc:
                 f = nc.Dataset(self.filename, 'w' if self.new else 'a')
                 break
             except:
-                print("Error opening file {}, trying again in 0.25 sec".format(self.filename))
-                time.sleep(0.25)
+                time.sleep(0.1)  # Sleeps for half the time that read-access sleeps for
 
         try:
             if source is not None:
@@ -871,92 +871,170 @@ class raw_nc:
         self.new = False
 
     def append_attribute(self, attr, attr_value):
-        data = nc.Dataset(self.filename, 'r+')
-        data.__setattr__(attr, attr_value)
-        data.close()
-        return d
+        t0 = time.time()
+        while (time.time() - t0) < 5:
+            try:
+                data = nc.Dataset(self.filename, 'r+')
+                data.__setattr__(attr, attr_value)
+                data.close()
+                return 0
+            except:
+                time.sleep(0.1)
+        raise RuntimeError("Cannot comply with command")
 
     def __len__(self):
-        data = nc.Dataset(self.filename, 'r')
-        n = data.dimensions['records'].size
-        data.close()
-        return n
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                n = data.dimensions['records'].size
+                data.close()
+                return n
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def __repr__(self):
-       data = nc.Dataset(self.filename, 'r')
-       s = str(data)
-       data.close()
-       return s
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                s = str(data)
+                data.close()
+                return s
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     __str__ = __repr__
 
     def get_variable(self, var, pos1=None, pos2=None):
-        data = nc.Dataset(self.filename, 'r')
-        if pos1 is not None:
-            if pos2 is not None:
-                x = data.variables[var][pos1, pos2].data
-            else:
-                x = data.variables[var][pos1].data
-        elif pos2 is not None:
-            x = data.variables[var][:, pos2].data
-        else:
-            x = data.variables[var][:].data
-        data.close()
-        return x
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                if pos1 is not None:
+                    if pos2 is not None:
+                        x = data.variables[var][pos1, pos2].data
+                    else:
+                        x = data.variables[var][pos1].data
+                elif pos2 is not None:
+                    x = data.variables[var][:, pos2].data
+                else:
+                    x = data.variables[var][:].data
+                data.close()
+                return x
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def has_variable(self, var):
-        data = nc.Dataset(self.filename, 'r')
-        x = var in data.variables
-        data.close()
-        return x
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                x = var in data.variables
+                data.close()
+                return x
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def variables(self):
-        data = nc.Dataset(self.filename, 'r')
-        x = list(data.variables.keys())
-        data.close()
-        return x
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                x = list(data.variables.keys())
+                data.close()
+                return x
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def variable_dimensions(self, var):
-        data = nc.Dataset(self.filename, 'r')
-        x = data.variables[var].dimensions
-        data.close()
-        return x
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                x = data.variables[var].dimensions
+                data.close()
+                return x
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def variable_dtype(self, var):
-        data = nc.Dataset(self.filename, 'r')
-        x = data.variables[var].dtype
-        data.close()
-        return x
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                x = data.variables[var].dtype
+                data.close()
+                return x
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def get_dimension(self, dim):
-        data = nc.Dataset(self.filename, 'r')
-        d = data.dimensions[dim].size
-        data.close()
-        return d
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                d = data.dimensions[dim].size
+                data.close()
+                return d
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def has_dimension(self, dim):
-        data = nc.Dataset(self.filename, 'r')
-        d = dim in data.dimensions
-        data.close()
-        return d
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                d = dim in data.dimensions
+                data.close()
+                return d
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def dimensions(self):
-        data = nc.Dataset(self.filename, 'r')
-        d = list(data.dimensions.keys())
-        data.close()
-        return d
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                d = list(data.dimensions.keys())
+                data.close()
+                return d
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def get_attribute(self, attr):
-        data = nc.Dataset(self.filename, 'r')
-        a = data.__getattribute__(attr)
-        data.close()
-        return a
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                a = data.__getattribute__(attr)
+                data.close()
+                return a
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def has_attribute(self, attr):
-        data = nc.Dataset(self.filename, 'r')
-        a = attr in dir(data)
-        data.close()
-        return a
+        t0 = time.time()
+        while (time.time() - t0) < 10:
+            try:
+                data = nc.Dataset(self.filename, 'r')
+                a = attr in dir(data)
+                data.close()
+                return a
+            except:
+                time.sleep(0.2)
+        raise RuntimeError("Cannot comply with command")
 
     def get_pos(self):
         return self.get_attribute('pos') if self.has_attribute('pos') else (self.get_dimension("records") - 1)
@@ -1088,191 +1166,3 @@ def nc2raw(datapos, fname_in, fname_out):
 
     a.close()
     f.close()
-
-
-def calibrate(self, pc, ph, pm, tc, th, noise=False):
-    """ Returns calibrated spectra
-
-        If noise is True returns calibration noise temperature
-        instead.
-
-        Input:
-            pc: power or count of cold load
-
-            ph: power or count of hot load
-
-            pm: power or count of measurement, the target of the
-                calibration
-
-            tc: temperature of the cold load
-
-            th: temperature of the hot load
-
-            noise: returns noise temperature if True or calibrated
-                   spectra elsewise
-    """
-
-    if None is pc or None is pm or None is ph or None is tc or None is th:
-        return None
-    elif noise:
-        return (th*pc - tc*ph) / (ph-pc)
-    else:
-        return tc + (pm-pc) * (th-tc) / (ph-pc)
-
-
-class clb_nc:
-    def __init__(self, rawfile):
-        self.rawfile = raw_nc(rawfile)
-
-    def pc(self, ind):
-        """ Selects the cold load power closest to the index """
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 4) and ind+0 <= n:
-            return self.rawfile.get_variable("record", ind)
-        elif ind in range(1, n, 4) and ind-1 <= n:
-            return self.rawfile.get_variable("record", ind-1)
-        elif ind in range(2, n, 4) and ind-2 <= n:
-            return self.rawfile.get_variable("record", ind-2)
-        elif ind in range(3, n, 4) and ind+1 <= n:
-            return self.rawfile.get_variable("record", ind+1)
-        else:
-            return None
-
-    def ph(self, ind):
-        """ Selects the hoy load power closest to the index """
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 4) and ind <= n:
-            return self.rawfile.get_variable("record", ind+2)
-        elif ind in range(1, n, 4) and ind-1 <= n:
-            return self.rawfile.get_variable("record", ind+1)
-        elif ind in range(2, n, 4) and ind-2 <= n:
-            return self.rawfile.get_variable("record", ind)
-        elif ind in range(3, n, 4) and ind+1 <= n:
-            return self.rawfile.get_variable("record", ind-1)
-        else:
-            return None
-
-    def pm(self, ind):
-        """ Selects the measurement power closest to the index """
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 2) and ind+1 <= n:
-            return self.rawfile.get_variable("record", ind+1)
-        elif ind in range(1, n, 2) and ind+0 <= n:
-            return self.rawfile.get_variable("record", ind)
-        else:
-            return None
-
-    def measurement_variable(self, var, ind):
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 2) and ind+1 <= n:
-            return self.rawfile.get_variable(var, ind+1)
-        elif ind in range(1, n, 2) and ind+0 <= n:
-            return self.rawfile.get_variable(var, ind)
-        else:
-            return None
-
-    def tc(self, ind):
-        """ Selects the cold load temperature closest to the index and adjusts it by any available offsets """
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 4) and ind+0 <= n:
-            tc = self.rawfile.get_variable("cold_load", ind, 0)
-        elif ind in range(1, n, 4) and ind-1 <= n:
-            tc = self.rawfile.get_variable("cold_load", ind-1, 0)
-        elif ind in range(2, n, 4) and ind-2 <= n:
-            tc = self.rawfile.get_variable("cold_load", ind-2, 0)
-        elif ind in range(3, n, 4) and ind+1 <= n:
-            tc = self.rawfile.get_variable("cold_load", ind+1, 0)
-        else:
-            tc = None
-
-        if self.rawfile.has_attribute('cold_load_offset') and tc is not None:
-            tc += self.rawfile.get_attribute('cold_load_offset')
-
-        return tc
-
-    def th(self, ind):
-        """ Selects the hot load temperature closest to the index and adjusts it by any available offsets """
-        n = self.rawfile.get_pos()
-        if ind in range(0, n, 4) and ind <= n:
-            th = self.rawfile.get_variable("hot_load", ind+2, 0)
-        elif ind in range(1, n, 4) and ind-1 <= n:
-            th = self.rawfile.get_variable("hot_load", ind+1, 0)
-        elif ind in range(2, n, 4) and ind-2 <= n:
-            th = self.rawfile.get_variable("hot_load", ind, 0)
-        elif ind in range(3, n, 4) and ind+1 <= n:
-            th = self.rawfile.get_variable("hot_load", ind-1, 0)
-        else:
-            th = None
-
-        if self.rawfile.has_attribute('hot_load_offset') and th is not None:
-            th += self.rawfile.get_attribute('hot_load_offset')
-
-        return th
-
-    def save_full(self, clbfile, nextrawfile=None):
-        """ Saves the calibration to a new clb file
-
-            If there is a nextrawfile given, it is used to
-            append a final value to the measurement for the
-            overlap time
-        """
-        assert self.rawfile.filename != clbfile, "Bad filenames"
-        data = nc.Dataset(clbfile, 'w')
-
-        n = self.rawfile.get_pos()
-        if n + 1 == self.rawfile.get_dimension('records'):
-            if nextrawfile is None:
-                data.createDimension("records", self.rawfile.get_dimension('records')//2 - 1)
-            else:
-                data.createDimension("records", self.rawfile.get_dimension('records')//2)
-        else:
-            data.createDimension("records", n//2)
-
-        # Add all old dimensions
-        for dim in self.rawfile.dimensions():
-            if dim != "records":
-                data.createDimension(dim, self.rawfile.get_dimension(dim))
-
-        # Add all old variables
-        output = {}
-        for var in self.rawfile.variables():
-            typs = self.rawfile.variable_dtype(var)
-            dims = self.rawfile.variable_dimensions(var)
-            data.createVariable(var, typs, dims)
-
-            output[var] = []
-
-        # Generate data
-        for k in range(data.dimensions['records'].size):
-            ind = 2*k + 1  # C[A]H[A], selecting A gives every 2k+1 variable is important
-            pc = self.pc(ind)
-            ph = self.ph(ind)
-            pm = self.pm(ind)
-            th = self.th(ind)
-            tc = self.tc(ind)
-            cal = calibrate(self, pc, ph, pm, tc, th, noise=False)
-
-            if cal is None:
-                raise RuntimeError("Bad netcdf conversion")
-
-            # for all variables but record, keep a copy
-            for var in self.rawfile.variables():
-                if var == 'record':
-                    output[var].append(cal)
-                else:
-                    output[var].append(self.measurement_variable(var, ind))
-
-
-        # Write variables to file
-        for var in self.rawfile.variables():
-            data.variables[var][:] = np.array(output[var])
-
-        # Set the standard attributes
-        data.source = self.rawfile.get_attribute('source') if self.rawfile.has_attribute('source') else "UNDEFINED"
-        data.end_time = self.rawfile.get_attribute('end_time') if self.rawfile.has_attribute('end_time') else "UNDEFINED"
-        data.start_time = self.rawfile.get_attribute('start_time') if self.rawfile.has_attribute('start_time') else "UNDEFINED"
-        data.hot_load_offset = self.rawfile.get_attribute('hot_load_offset') if self.rawfile.has_attribute('hot_load_offset') else 0.0
-        data.cold_load_offset = self.rawfile.get_attribute('cold_load_offset') if self.rawfile.has_attribute('cold_load_offset') else 0.0
-
-        data.close()
-
