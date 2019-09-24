@@ -298,7 +298,7 @@ def geo_pos_agenda(ws):
     ws.VectorSet(ws.geo_pos, np.array([]))
 
 
-def arts_water_radiometer_mps_xffts(y, f, p, sy, sx, atmdir, linefile):
+def arts_inv(y, f, p, sy, sx, atmdir, linefile):
     arts = Workspace(0)
 
     # Set some agendas
@@ -380,13 +380,13 @@ def arts_water_radiometer_mps_xffts(y, f, p, sy, sx, atmdir, linefile):
     arts.AtmRawRead(basename=atmdir)
     arts.AtmFieldsCalc()
 
-    arts.wind_u_field = arts.z_field.value+0+0.1
+    arts.wind_u_field = arts.z_field.value*0+0.1
     arts.wind_v_field = arts.z_field.value*0+0.1
     arts.wind_w_field = arts.z_field.value*0+0.1
 
     # Set observation geometry... You can make more positions and los
-    arts.sensor_pos = np.array([[150]])  # [[ALT, LAT, LON]]
-    arts.sensor_los = np.array([[65]])  # [[ZENITH, AZIMUTH]]
+    arts.sensor_pos = np.array([[10000]])  # [[ALT, LAT, LON]]
+    arts.sensor_los = np.array([[70]])  # [[ZENITH, AZIMUTH]]
 
     sa1 = covmat1d_from_cfun(arts.z_field.value.flatten(),
                              5e-7, Cl=1e3,
@@ -407,7 +407,7 @@ def arts_water_radiometer_mps_xffts(y, f, p, sy, sx, atmdir, linefile):
     arts.retrievalAddPolyfit(poly_order=1)
 
     arts.covmat_block = sp.sparse.csc.csc_matrix(1e-4*np.diag(np.ones((2))))
-    arts.retrievalAddSinefit(period_lengths=np.array([2e6, 4e6, 8e6, 16e6, 32e6, 64e6, 128e6]))
+    arts.retrievalAddSinefit(period_lengths=np.array([5e6, 10e6, 20e6, 40e6, 80e8, 160e6, 320e6]))
     arts.retrievalDefClose()
 
     arts.cloudboxOff()
@@ -429,7 +429,7 @@ def arts_water_radiometer_mps_xffts(y, f, p, sy, sx, atmdir, linefile):
     arts.xaStandard()
     arts.y = y
 
-    arts.OEM(method="lm", max_iter=20, display_progress=0, clear_matrices=0,
+    arts.OEM(method="li", max_iter=20, display_progress=0, clear_matrices=0,
              lm_ga_settings=np.array([100.0, 5.0, 2.0, 10.0, 1.0, 1.0]))
 
     arts.x2artsSensor()
@@ -452,7 +452,7 @@ def arts_water_radiometer_mps_xffts(y, f, p, sy, sx, atmdir, linefile):
     out["covmat_ss"] = copy(arts.covmat_ss.value),
     out["covmat_so"] = copy(arts.covmat_so.value),
 
-    out['description'] = "First order polynominal with waves at [4e6, 8e6, 16e6, 32e6, 64e6, 128e6]"
+    out['description'] = "First order polynominal with waves at [5e6, 10e6, 20e6, 40e6, 80e8, 160e6, 320e6]"
 
     del arts
     return out

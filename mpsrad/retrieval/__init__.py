@@ -8,3 +8,4 @@ Created on Tue Sep 17 08:16:15 2019
 
 from . import calib
 from . import waspam_500mhz_xffts
+from . import waspam_40mhz_cts

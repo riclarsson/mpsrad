@@ -36,7 +36,7 @@ def calibrate(self, pc, ph, pm, tc, th, noise=False):
                    spectra elsewise
     """
 
-    if None is pc or None is pm or None is ph or None is tc or None is th:
+    if (pc is None) or (pm is None) or (ph is None) or (tc is None) or (th is None):
         return None
     elif noise:
         return (th*pc - tc*ph) / (ph-pc)
@@ -356,21 +356,42 @@ class clb_nc:
 
                 data.createVariable(var, typs, ("records", "spectras", "reduced_channels"))
                 output[var] = []
+
+                data.createVariable("mean_cold_count", typs, ("records", "spectras", "one"))
+                data.createVariable("mean_hot_count", typs, ("records", "spectras", "one"))
+                data.createVariable("mean_atm_count", typs, ("records", "spectras", "one"))
+                data.createVariable("mean_cold_temp", typs, ("records", "one"))
+                data.createVariable("mean_hot_temp", typs, ("records", "one"))
+                output["mean_cold_count"] = []
+                output["mean_hot_count"] = []
+                output["mean_atm_count"] = []
+                output["mean_cold_temp"] = []
+                output["mean_hot_temp"] = []
             else:
                 data.createVariable(var, typs, dims)
                 output[var] = []
+        data.sync()
 
         # Generate data
         for k in range(data.dimensions['records'].size):
+            if not k%100:
+                print('{}% DONE'.format(round(100*k/data.dimensions['records'].size, 1)))
+
             ind = 2*k + 1  # C[A]H[A], selecting A gives every 2k+1 variable is important
-            pc = np.array(self.pc(ind))
-            ph = np.array(self.ph(ind))
-            pm = np.array(self.pm(ind))
-            th = np.array(self.th(ind))
-            tc = np.array(self.tc(ind))
+            pc = np.array(self.pc(ind)[:, start_ind:end_ind])
+            ph = np.array(self.ph(ind)[:, start_ind:end_ind])
+            pm = np.array(self.pm(ind)[:, start_ind:end_ind])
+            tc = np.array(self.tc(ind)) + reduction_method.get('cold', 0.)
+            th = np.array(self.th(ind)) + reduction_method.get('hot', 0.)
             cal = calibrate(self, pc, ph, pm, tc, th, noise=False)
-            nans, x= nan_helper(cal)
-            cal[nans]= np.interp(x(nans), x(~nans), cal[~nans])
+            bads, x = bad_val_helper(cal)
+            cal[bads]= np.interp(x(bads), x(~bads), cal[~bads])
+
+            output["mean_cold_count"].append(np.mean(pc, axis=1))
+            output["mean_hot_count"].append(np.mean(ph, axis=1))
+            output["mean_atm_count"].append(np.mean(pm, axis=1))
+            output["mean_cold_temp"].append(tc.flatten())
+            output["mean_hot_temp"].append(th.flatten())
 
             if cal is None:
                 raise RuntimeError("Bad netcdf conversion")
@@ -383,7 +404,7 @@ class clb_nc:
                     cal_red = np.zeros((self.rawfile.get_dimension("spectras"), len(f_red)), dtype="f4")
                     for spec in range(self.rawfile.get_dimension("spectras")):
                         c, pt[spec], cal0[spec] = tropospheric_correction(cal[spec])
-                        cal_red[spec], _ = bindata(c[start_ind:end_ind], f_orig[start_ind:end_ind],
+                        cal_red[spec], _ = bindata(c, f_orig[start_ind:end_ind],
                                reduction_method['freq0'], reduction_method['steps'], do_x=True)
                     output[var].append(cal_red)
                     output["pseudo_transmission"].append(pt)
@@ -404,6 +425,7 @@ class clb_nc:
         data.cold_load_offset = self.rawfile.get_attribute('cold_load_offset') if self.rawfile.has_attribute('cold_load_offset') else 0.0
         data.orig_filename = self.rawfile.filename
 
+        data.sync()
         data.close()
 
 def timegroup(timelist, times):
@@ -425,13 +447,6 @@ def minute(r, min):
 
     t0 = datetime.datetime.fromtimestamp(time[0])
     start = 0
-
-    for i in range(1, n):
-        t = datetime.datetime.fromtimestamp(time[i])
-        if t0.day != t.day:
-            t0 = datetime.datetime.fromtimestamp(time[i])
-            start = i
-            break
 
     minutes = np.linspace(0, 60-min, 60//min)
     g0 = timegroup(minutes, t0.minute)
@@ -459,13 +474,6 @@ def hour(r, h):
     t0 = datetime.datetime.fromtimestamp(time[0])
     start = 0
 
-    for i in range(1, n):
-        t = datetime.datetime.fromtimestamp(time[i])
-        if t0.day != t.day:
-            t0 = datetime.datetime.fromtimestamp(time[i])
-            start = i
-            break
-
     hours = np.linspace(0, 24-h, 24//h)
     g0 = timegroup(hours, t0.hour)
 
@@ -491,13 +499,6 @@ def days(r, days):
 
     t0 = datetime.datetime.fromtimestamp(time[0])
     start = 0
-
-    for i in range(1, n):
-        t = datetime.datetime.fromtimestamp(time[i])
-        if t0.day != t.day:
-            t0 = datetime.datetime.fromtimestamp(time[i])
-            start = i
-            break
 
     inds = [start]
     for i in range(start, n):
@@ -636,13 +637,13 @@ class timescale:
                 s = two_minutely(times)
             elif key == 'five_minutes':
                 s = five_minutely(times)
-            elif key == 'fifteen_minutes':
+            elif key == 'quarter':
                 s = fifteen_minutely(times)
             elif key == 'hour':
                 s = hourly(times)
             elif key == 'two_hours':
                 s = two_hourly(times)
-            elif key == 'daily':
+            elif key == 'day':
                 s = daily(times)
             else:
                 raise Warning("Did not find the time-key: {}".format(key))
@@ -685,6 +686,7 @@ def data_by_inds(ncdata, start, end):
 
 
 def redfiles2prodir(redfiles, prodir, timescale, std=True):
+    redfiles.sort()
     # Represent when and how in a file that a timescale is encountered from a list of files, will start from full timescale
     inds, times = timescale(redfiles)
     #  Here:
@@ -701,26 +703,32 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
     # The list of each "PROFILE_X" is a list of files that combines to a single
     # entry in the saved profile.
 
+
+    x = nc.Dataset(redfiles[0], 'r')
+    source = x.source
+    x.close()
+
     version = None
-    n = 0
     for scale in inds:
+        n = 0
         ts = inds[scale]
 
         for profile in ts:
-            profilename = "{}/{}-{}.nc".format(prodir, profile, scale)
+            profilename = "{}/pro-{}-{}-{}.nc".format(prodir, source.replace(' ', '-'), profile, scale)
             save_file = nc.Dataset(profilename, 'w')
 
             prolist = ts[profile]
 
+            fnames = []
+
             for i in range(len(prolist)):
-                print(profile, ' ', 100*i/len(prolist), '%', sep='')
+#                print(profile, ' ', 100*i/len(prolist), '%', sep='')
                 entrylist = prolist[i]
                 start = entrylist[0]
                 end = entrylist[1]
 
-                fnames = []
-
                 if len(entrylist) == 3:
+#                    print(start-n, end-n)
                     redfile = nc.Dataset(entrylist[2], 'r')
                     avg = data_by_inds(redfile, start-n, end-n)
                 else:
@@ -768,6 +776,10 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
                                                  redfile.variables[key].dtype,
                                                  redfile.variables[key].dimensions)
 
+#                for key in avg:
+#                    print(key, avg[key].shape)
+#                print('\n')
+
                 # Save to file
                 for j in range(save_file.dimensions['spectras'].size):
                     if std:
@@ -790,11 +802,11 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
             if len(prolist):
                 save_file.version = version
 
-                fnames = np.unique(fnames)
-                origfiles = ''
-                for fname in fnames:
-                    origfiles+= '{};'.format(fname)
-                save_file.original_files = origfiles
+                # fnames = np.unique(fnames)
+                # origfiles = ''
+                # for fname in fnames:
+                #    origfiles+= '{};'.format(fname)
+                # save_file.original_files = origfiles
 
                 try:
                     save_file.start_time = datetime.datetime.fromtimestamp(save_file.variables['time'][0][0]).strftime("%Y-%m-%d %H:%M:%S")
@@ -809,29 +821,37 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
                 try:
                     save_file.source = redfile.source
                 except:
-                    pass
+                    save_file.source = "UNKNOWN"
             save_file.close()
 
 
 def rawfiles2redfiles(rawfiles, reddir, corr_target=3.5, corr_trp_temp=273.15,
                       corr_method="median", red_f=np.array([-1, 1]), red_f0=0,
-                      red_steps=10, start_ind=0, end_ind=-1):
+                      red_steps=10, start_ind=0, end_ind=-1,
+                      cold_offset=0., hot_offset=0.):
     trp = trp_corr(trp_target=corr_target, trp_temp=corr_trp_temp,  method=corr_method)
     red = {"freq0": red_f0, 'freq': red_f, 'steps': red_steps, "start_ind": start_ind,
-           "end_ind": end_ind}
+           "end_ind": end_ind, "cold": cold_offset, "hot": hot_offset}
 
     for rawfile in rawfiles:
-        clb = clb_nc(rawfile)
+        try:
+            print("Doing", rawfile)
+            clb = clb_nc(rawfile)
 
-        fname = os.path.join(reddir,
-                             'red.' + os.path.split(rawfile)[-1])
+            fname = os.path.join(reddir,
+                                 'red.' + os.path.split(rawfile)[-1])
 
-        clb.save_full_red(fname, trp, red)
+            clb.save_full_red(fname, trp, red)
+        except:
+            pass
 
 
-def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linefile, inv_func):
+def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linefile, inv_func, truncate=True):
     assert len(p_grid) == covmat_sx.shape[0], "Bad dims or types"
     assert len(p_grid) == covmat_sx.shape[1], "Bad dims or types"
+
+    if os.path.exists(invfile):
+        os.system('rm {}'.format(invfile))
 
     # Read all necessary data
     data = nc.Dataset(profile, 'r')
@@ -844,6 +864,18 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
         source = data.source
     except:
         source = "UNKNOWN"
+    try:
+        version = data.version
+    except:
+        version = 0.
+    try:
+        start_time = data.start_time
+    except:
+        start_time = "UNKNOWN"
+    try:
+        end_time = data.end_time
+    except:
+        end_time = "UNKNOWN"
     data.close()
 
     # Create the file to write towards
@@ -858,10 +890,13 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
     outfile.createDimension('channels', len(fo))
     outfile.std = int(len(covmat_sy.shape) == 3)
     outfile.source = source
+    outfile.version = version
+    outfile.start_time = start_time
+    outfile.end_time = end_time
 
     # Create the variables that are known at start
     outfile.createVariable('y', np.float32, ('records', 'spectras', 'reduced_channels'))
-    outfile.createVariable('time', np.float32, ('records', 'one'))
+    outfile.createVariable('time', np.float64, ('records', 'one'))
     outfile.createVariable('f_red', np.float32, ('reduced_channels'))
     outfile.createVariable('f_orig', np.float32, ('channels'))
     if outfile.std:
@@ -882,6 +917,9 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
 
     done_a_loop = False
     for i in range(outfile.dimensions['records'].size):
+        print(invfile, ' ',
+              round(100 * i / outfile.dimensions['records'].size, 1),
+              '% done', sep='')
         for j in range(outfile.dimensions['spectras'].size):
 
             if any(np.isnan(y[i][j])) or any(np.isnan(covmat_sy[i][j])):
@@ -929,19 +967,19 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
     outfile.close()
 
 
-def nan_helper(y):
+def bad_val_helper(y):
     """Helper to handle indices and logical indices of NaNs.
 
     Input:
         - y, 1d numpy array with possible NaNs
     Output:
-        - nans, logical indices of NaNs
+        - bads, logical indices of Bad Values
         - index, a function, with signature indices= index(logical_indices),
           to convert logical indices of NaNs to 'equivalent' indices
     Example:
         >>> # linear interpolation of NaNs
-        >>> nans, x= nan_helper(y)
-        >>> y[nans]= np.interp(x(nans), x(~nans), y[~nans])
+        >>> bads, x= bad_val_helper(y)
+        >>> y[nans]= np.interp(x(bads), x(~bads), y[~bads])
     """
 
-    return np.isnan(y), lambda z: z.nonzero()[0]
+    return np.logical_not(np.isfinite(y)), lambda z: z.nonzero()[0]

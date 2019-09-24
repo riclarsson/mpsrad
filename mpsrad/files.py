@@ -849,6 +849,10 @@ class raw_nc:
                     f.createDimension('two', 2)
                 elif key == 'record':
                     f.createDimension('channels', data[key].shape[-1])
+                    if len(data['record'].shape) == 3:
+                        f.createDimension('spectras', data[key].shape[-2])
+                    else:
+                        f.createDimension('spectras', 1)
                 else:
                     f.createDimension('n' + key, data[key].shape[-1])
 
@@ -857,7 +861,7 @@ class raw_nc:
             elif data[key].shape[-1] == 2:
                 input.append(f.createVariable(key, type(data[key][0, 0]), ('records', 'two')))
             elif key == 'record':
-                input.append(f.createVariable(key, type(data[key][0, 0]), ('records', 'channels')))
+                input.append(f.createVariable(key, type(data[key][0, 0]), ('records', 'spectras', 'channels')))
             else:
                 input.append(f.createVariable(key, type(data[key][0, 0]), ('records', 'n'+key)))
 
