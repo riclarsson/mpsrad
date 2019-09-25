@@ -919,13 +919,13 @@ class raw_nc:
                 data = nc.Dataset(self.filename, 'r')
                 if pos1 is not None:
                     if pos2 is not None:
-                        x = data.variables[var][pos1, pos2].data
+                        x = data.variables[var][pos1, pos2]
                     else:
-                        x = data.variables[var][pos1].data
+                        x = data.variables[var][pos1]
                 elif pos2 is not None:
-                    x = data.variables[var][:, pos2].data
+                    x = data.variables[var][:, pos2]
                 else:
-                    x = data.variables[var][:].data
+                    x = data.variables[var][:]
                 data.close()
                 return x
             except:
