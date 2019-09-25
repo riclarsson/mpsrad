@@ -298,7 +298,7 @@ def geo_pos_agenda(ws):
     ws.VectorSet(ws.geo_pos, np.array([]))
 
 
-def arts_inv(y, f, p, sy, sx, atmdir, linefile):
+def arts_inv(y, f, p, sy, sx, atmdir, linefile, custom_sx):
     arts = Workspace(0)
 
     # Set some agendas
@@ -388,19 +388,21 @@ def arts_inv(y, f, p, sy, sx, atmdir, linefile):
     arts.sensor_los = np.array([[70]])  # [[ZENITH, AZIMUTH]]
 
     sa1 = covmat1d_from_cfun(arts.z_field.value.flatten(),
-                             5e-7, Cl=1e3,
+                             1e-6, Cl=1e3,
                              cfun='exp')
-
+    if custom_sx:
+        sa1, _ = sa_matrix_interp(sx,
+                                  arts.z_field.value.flatten(), sa1)
     arts.retrievalDefInit()
     arts.covmat_block = copy(sa1)
     arts.retrievalAddAbsSpecies(g1=arts.p_grid, g2=np.array([]),
                                 g3=np.array([]), species='H2O', unit="vmr",
                                 for_species_tag=0)
 
-#    arts.covmat_block = sp.sparse.csc.csc_matrix(100*np.ones((1, 1)))
-#    arts.retrievalAddWind(g1=np.array([arts.p_grid.value.mean()]),
-#                          g2=np.array([]), g3=np.array([]),
-#                          component="strength")
+    arts.covmat_block = sp.sparse.csc.csc_matrix(100*np.ones((1, 1)))
+    arts.retrievalAddWind(g1=np.array([arts.p_grid.value.mean()]),
+                          g2=np.array([]), g3=np.array([]),
+                          component="strength")
 
     arts.covmat_block = sp.sparse.csc.csc_matrix(np.ones((1, 1)))
     arts.retrievalAddPolyfit(poly_order=1)
@@ -416,7 +418,7 @@ def arts_inv(y, f, p, sy, sx, atmdir, linefile):
     if len(sy.shape) == 2:
         arts.covmat_seSet(covmat=sp.sparse.csc.csc_matrix(np.float64(sy)))
     else:
-        arts.covmat_seSet(covmat=sp.sparse.csc.csc_matrix(1e-4*np.diag(sy)))
+        arts.covmat_seSet(covmat=sp.sparse.csc.csc_matrix(np.diag(sy)))
 
     arts.atmfields_checkedCalc()
     arts.atmgeom_checkedCalc()
