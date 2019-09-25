@@ -718,7 +718,6 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
 
         for profile in ts:
             profilename = "{}/pro.{}-{}-{}.nc".format(prodir, source.replace(' ', '-'), profile, scale)
-            print(profilename)
             save_file = nc.Dataset(profilename, 'w')
 
             prolist = ts[profile]
