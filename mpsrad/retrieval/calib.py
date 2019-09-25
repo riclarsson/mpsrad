@@ -256,9 +256,9 @@ class clb_nc:
 
         n = self.rawfile.get_pos()
         if n + 1 == self.rawfile.get_dimension('records'):
-            data.createDimension("records", self.rawfile.get_dimension('records')//2)
+            data.createDimension("records", self.rawfile.get_dimension('records')//2 - 1)
         else:
-            data.createDimension("records", n//2)
+            data.createDimension("records", n//2 - 1)
 
         # Add all old dimensions
         for dim in self.rawfile.dimensions():
@@ -615,8 +615,11 @@ class timescale:
         files = []
         for fil in list_of_files:
             x = nc.Dataset(fil, 'r')
-
-            tn = x.variables['time'][:].flatten()
+            try:
+                tn = x.variables['time'][:].flatten()
+            except KeyError:
+                print("Missing time in: ", fil)
+                continue
             x.close()
 
             files.append([fil, len(tn)])
@@ -714,7 +717,8 @@ def redfiles2prodir(redfiles, prodir, timescale, std=True):
         ts = inds[scale]
 
         for profile in ts:
-            profilename = "{}/pro-{}-{}-{}.nc".format(prodir, source.replace(' ', '-'), profile, scale)
+            profilename = "{}/pro.{}-{}-{}.nc".format(prodir, source.replace(' ', '-'), profile, scale)
+            print(profilename)
             save_file = nc.Dataset(profilename, 'w')
 
             prolist = ts[profile]
@@ -846,9 +850,10 @@ def rawfiles2redfiles(rawfiles, reddir, corr_target=3.5, corr_trp_temp=273.15,
             pass
 
 
-def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linefile, inv_func, truncate=True):
-    assert len(p_grid) == covmat_sx.shape[0], "Bad dims or types"
-    assert len(p_grid) == covmat_sx.shape[1], "Bad dims or types"
+def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linefile, inv_func, truncate=True, custom_sx=False):
+    if not custom_sx:
+        assert len(p_grid) == covmat_sx.shape[0], "Bad dims or types"
+        assert len(p_grid) == covmat_sx.shape[1], "Bad dims or types"
 
     if os.path.exists(invfile):
         os.system('rm {}'.format(invfile))
@@ -910,7 +915,6 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
     outfile.variables['y'][:] = y
     outfile.variables['time'][:] = t
     outfile.variables['covmat_sy'][:] = covmat_sy
-    outfile.variables['covmat_sx'][:] = covmat_sx
     outfile.variables['p_grid'][:] = p_grid
     outfile.variables['f_red'][:] = f
     outfile.variables['f_orig'][:] = fo
@@ -922,11 +926,11 @@ def profile2invfile(profile, invfile, p_grid, f_adjust, covmat_sx, atmdir, linef
               '% done', sep='')
         for j in range(outfile.dimensions['spectras'].size):
 
-            if any(np.isnan(y[i][j])) or any(np.isnan(covmat_sy[i][j])):
+            if any(np.isnan(y[i][j].flatten())) or any(np.isnan(covmat_sy[i][j].flatten())):
                 continue
 
             out = inv_func(np.float64(y[i][j]), np.float64(f), np.float64(p_grid),
-                           np.float64(covmat_sy[i][j]), np.float64(covmat_sx), atmdir, linefile)
+                           np.float64(covmat_sy[i][j]), covmat_sx, atmdir, linefile, custom_sx)
 
             if not done_a_loop:
                 outfile.createVariable('f_grid', np.float64, ('reduced_channels'))
@@ -983,3 +987,130 @@ def bad_val_helper(y):
     """
 
     return np.logical_not(np.isfinite(y)), lambda z: z.nonzero()[0]
+
+
+def fix_bad_file(filename, fix, tmpfile='tmp.nc'):
+    x = nc.Dataset(filename, 'r')
+    if 'time' not in x.variables or 'record' not in x.variables:
+        x.close()
+        assert False, "Bad input (lack of key variables): {}".format(filename)
+    else:
+        x.close()
+
+    success = False
+    if 'dim-spectras' in fix:
+        spectras = fix.pop('dim-spectras')
+        x = nc.Dataset(filename, 'r')
+        if 'spectras' in x.dimensions:
+            x.close()
+            if len(fix):
+                fix_bad_file(filename, fix, tmpfile)
+            else:
+                return
+        y = x.variables['record'][:]
+        x.close()
+
+        y.reshape(y.shape[0], spectras, y.shape[1]//spectras)
+
+        with nc.Dataset(filename) as src, nc.Dataset(tmpfile, "w") as dst:
+            # copy global attributes all at once via dictionary
+            dst.setncatts(src.__dict__)
+            # copy dimensions
+            for name, dimension in src.dimensions.items():
+                dst.createDimension(
+                    name, (len(dimension) if not dimension.isunlimited() else None))
+            # copy all file data except for the excluded
+            for name, variable in src.variables.items():
+                if name != 'record':
+                    x = dst.createVariable(name, variable.datatype, variable.dimensions)
+                    dst[name][:] = src[name][:]
+                    # copy variable attributes all at once via dictionary
+                    dst[name].setncatts(src[name].__dict__)
+            dst.createDimension('spectras', spectras)
+            dst.createVariable('record', y.dtype, ['records', 'spectras', 'channels'])
+            dst['record'][:] = y
+        success = True
+    elif 'set-pos-records' in fix:
+        _ = fix.pop('set-pos-records')
+        with nc.Dataset(filename) as src, nc.Dataset(tmpfile, "w") as dst:
+            # copy global attributes all at once via dictionary
+            dst.setncatts(src.__dict__)
+            # copy dimensions
+            for name, dimension in src.dimensions.items():
+                if name != 'records':
+                    dst.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+                else:
+                    dst.createDimension(name, src.variables['time'][:].shape[0])
+                    dst.__setattr__('pos', dst.dimensions['records'].size - 1)
+
+            for name, variable in src.variables.items():
+                x = dst.createVariable(name, variable.datatype, variable.dimensions)
+                dst[name][:] = src[name][:]
+                dst[name].setncatts(src[name].__dict__)
+        success = True
+    elif 'set-times' in fix:
+        _ = fix.pop('set-times')
+        with nc.Dataset(filename) as src, nc.Dataset(tmpfile, "w") as dst:
+            # copy global attributes all at once via dictionary
+            dst.setncatts(src.__dict__)
+            # copy dimensions
+            for name, dimension in src.dimensions.items():
+                if name != 'records':
+                    dst.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+                else:
+                    dst.createDimension(name, src.variables['time'][:].shape[0])
+                    dst.__setattr__('pos', dst.dimensions['records'].size - 1)
+
+            for name, variable in src.variables.items():
+                x = dst.createVariable(name, variable.datatype, variable.dimensions)
+                dst[name][:] = src[name][:]
+                dst[name].setncatts(src[name].__dict__)
+            dst.__setattr__('start_time', datetime.datetime.fromtimestamp(src.variables['time'][:].flatten()[0]).strftime("%Y-%m-%d %H:%M:%S"))
+            dst.__setattr__('end_time', datetime.datetime.fromtimestamp(src.variables['time'][:].flatten()[-1]).strftime("%Y-%m-%d %H:%M:%S"))
+        success = True
+    elif 'set-source' in fix:
+        m = fix.pop('set-source')
+        with nc.Dataset(filename) as src, nc.Dataset(tmpfile, "w") as dst:
+            # copy global attributes all at once via dictionary
+            dst.setncatts(src.__dict__)
+            # copy dimensions
+            for name, dimension in src.dimensions.items():
+                if name != 'records':
+                    dst.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+                else:
+                    dst.createDimension(name, src.variables['time'][:].shape[0])
+                    dst.__setattr__('pos', dst.dimensions['records'].size - 1)
+
+            for name, variable in src.variables.items():
+                x = dst.createVariable(name, variable.datatype, variable.dimensions)
+                dst[name][:] = src[name][:]
+                dst[name].setncatts(src[name].__dict__)
+            dst.__setattr__('source', m)
+        success = True
+    else:
+        with nc.Dataset(filename) as src, nc.Dataset(tmpfile, "w") as dst:
+            # copy global attributes all at once via dictionary
+            dst.setncatts(src.__dict__)
+            # copy dimensions
+            for name, dimension in src.dimensions.items():
+                dst.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+
+            for name, variable in src.variables.items():
+                x = dst.createVariable(name, variable.datatype, variable.dimensions)
+                dst[name][:] = src[name][:]
+                dst[name].setncatts(src[name].__dict__)
+        for key in fix:
+            m = fix.pop(key)
+            with nc.Dataset(tmpfile, "a") as dst:
+                dst.__setattr__(key, m)
+        success = True
+
+    if success:
+        os.remove(filename)
+        os.rename(tmpfile, filename)
+
+    if len(fix):
+        fix_bad_file(filename, fix, tmpfile)
+
+
+
